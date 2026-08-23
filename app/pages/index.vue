@@ -1,6 +1,8 @@
 <script setup lang="ts">
 const {
-  apiKey,
+  loaded,
+  hasApiKey,
+  topic,
   businessInfo,
   tone,
   length,
@@ -31,10 +33,23 @@ const seoScore = computed(() => {
 
 <template>
   <UContainer class="py-8 max-w-none">
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+    <div
+      v-if="!loaded"
+      class="flex items-center justify-center py-24 text-muted"
+    >
+      <UIcon
+        name="i-lucide-loader-circle"
+        class="size-6 animate-spin"
+      />
+    </div>
+
+    <div
+      v-else
+      class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start"
+    >
       <div class="lg:col-span-5 space-y-6">
         <UAlert
-          v-if="!apiKey"
+          v-if="!hasApiKey"
           color="warning"
           variant="subtle"
           icon="i-lucide-key-round"
@@ -62,14 +77,14 @@ const seoScore = computed(() => {
           </template>
 
           <div class="space-y-6">
+            <TopicSection v-model="topic" />
+            <USeparator />
             <TitleSection v-model="customTitle" />
             <USeparator />
             <KeywordSection
               v-model:main-keyword="mainKeyword"
               v-model:related-keywords-input="relatedKeywordsInput"
             />
-            
-            
             <USeparator />
             <ReferenceSection v-model="referenceContent" />
             <USeparator />
@@ -78,7 +93,10 @@ const seoScore = computed(() => {
               v-model:length="length"
             />
             <USeparator />
-            <BusinessInfoSection v-model="businessInfo" />
+            <BusinessInfoSection
+              v-model="businessInfo"
+              :topic="topic"
+            />
             <USeparator />
             <FooterTextSection v-model="footerText" />
           </div>

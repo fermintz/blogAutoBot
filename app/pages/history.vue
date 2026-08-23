@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { SavedArticle } from '~~/shared/types'
 
-const { items, remove, clear } = useHistory()
+const { items, loaded, remove, clear } = useHistory()
 
 const selected = ref<SavedArticle | null>(null)
 const isOpen = ref(false)
@@ -19,7 +19,7 @@ const dateFormatter = new Intl.DateTimeFormat('ko-KR', {
   minute: '2-digit'
 })
 
-function formatDate(timestamp: number) {
+function formatDate(timestamp: string) {
   return dateFormatter.format(new Date(timestamp))
 }
 </script>
@@ -32,11 +32,11 @@ function formatDate(timestamp: number) {
           저장된 글
         </h1>
         <p class="text-muted mt-1">
-          생성했던 글들이 이 브라우저에 자동으로 저장됩니다. 최근 {{ items.length }}개를 보관하고 있어요.
+          생성했던 글들이 계정에 자동으로 저장됩니다. 최근 {{ items.length }}개를 보관하고 있어요.
         </p>
       </div>
       <UButton
-        v-if="items.length"
+        v-if="loaded && items.length"
         icon="i-lucide-trash-2"
         color="error"
         variant="subtle"
@@ -48,7 +48,17 @@ function formatDate(timestamp: number) {
     </div>
 
     <div
-      v-if="items.length"
+      v-if="!loaded"
+      class="flex items-center justify-center py-24 text-muted"
+    >
+      <UIcon
+        name="i-lucide-loader-circle"
+        class="size-6 animate-spin"
+      />
+    </div>
+
+    <div
+      v-else-if="items.length"
       class="space-y-3"
     >
       <UCard

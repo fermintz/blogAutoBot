@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const { user, signOut } = useAuth()
+
 useHead({
   meta: [
     { name: 'viewport', content: 'width=device-width, initial-scale=1' }
@@ -47,6 +49,14 @@ useSeoMeta({
           aria-label="설정"
           color="neutral"
           variant="ghost"
+        />
+        <UButton
+          v-if="user"
+          icon="i-lucide-log-out"
+          aria-label="로그아웃"
+          color="neutral"
+          variant="ghost"
+          @click="signOut"
         />
         <UColorModeButton />
       </div>

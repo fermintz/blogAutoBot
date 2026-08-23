@@ -41,8 +41,17 @@ const bodySegments = computed<BodySegment[]>(() => {
 })
 
 async function copy(text: string, label: string) {
-  await navigator.clipboard.writeText(text)
-  toast.add({ title: `${label} 복사 완료`, icon: 'i-lucide-check', color: 'success' })
+  const success = await copyToClipboard(text)
+  if (success) {
+    toast.add({ title: `${label} 복사 완료`, icon: 'i-lucide-check', color: 'success' })
+  } else {
+    toast.add({
+      title: `${label} 복사 실패`,
+      description: '브라우저의 클립보드 권한을 확인하고 다시 시도해주세요.',
+      icon: 'i-lucide-circle-x',
+      color: 'error'
+    })
+  }
 }
 </script>
 

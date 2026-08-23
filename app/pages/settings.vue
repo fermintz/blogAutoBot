@@ -1,7 +1,5 @@
 <script setup lang="ts">
-const apiKey = usePersistedState<string>('autoblog:apiKey', '')
-const bodyTemplate = usePersistedState<string>('autoblog:bodyTemplate', DEFAULT_BODY_TEMPLATE)
-const writingRules = usePersistedState<string>('autoblog:writingRules', '')
+const { loaded, bodyTemplates, writingRules, hasApiKey } = useUserSettings()
 </script>
 
 <template>
@@ -11,12 +9,25 @@ const writingRules = usePersistedState<string>('autoblog:writingRules', '')
         설정
       </h1>
       <p class="text-muted mt-1">
-        API 키와 글 생성 기본값을 관리합니다. 이 브라우저에만 저장되며 서버에는 저장되지 않습니다.
+        API 키와 글 생성 기본값을 관리합니다. 계정에 저장되며 다른 기기에서도 동일하게 적용됩니다.
       </p>
     </div>
 
-    <div class="space-y-6">
-      <ApiKeySettings v-model="apiKey" />
+    <div
+      v-if="!loaded"
+      class="flex items-center justify-center py-24 text-muted"
+    >
+      <UIcon
+        name="i-lucide-loader-circle"
+        class="size-6 animate-spin"
+      />
+    </div>
+
+    <div
+      v-else
+      class="space-y-6"
+    >
+      <ApiKeySettings v-model:has-api-key="hasApiKey" />
 
       <UCard>
         <template #header>
@@ -31,7 +42,7 @@ const writingRules = usePersistedState<string>('autoblog:writingRules', '')
           </div>
         </template>
 
-        <BodyTemplateSection v-model="bodyTemplate" />
+        <BodyTemplateSection v-model="bodyTemplates" />
       </UCard>
 
       <UCard>

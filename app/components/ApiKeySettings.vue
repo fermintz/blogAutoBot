@@ -1,15 +1,17 @@
 <script setup lang="ts">
-const apiKey = defineModel<string>({ required: true })
+const hasApiKey = defineModel<boolean>('hasApiKey', { required: true })
 
+const keyInput = ref('')
 const showKey = ref(false)
 
-type KeyStatus = 'idle' | 'checking' | 'valid' | 'invalid'
+type KeyStatus = 'idle' | 'checking' | 'saving' | 'invalid'
 const status = ref<KeyStatus>('idle')
 const errorText = ref('')
+const removing = ref(false)
 
 let debounceTimer: ReturnType<typeof setTimeout> | undefined
 
-watch(apiKey, (value) => {
+watch(keyInput, (value) => {
   status.value = 'idle'
   errorText.value = ''
   if (debounceTimer) clearTimeout(debounceTimer)
@@ -17,23 +19,37 @@ watch(apiKey, (value) => {
   const trimmed = value.trim()
   if (!trimmed) return
 
-  debounceTimer = setTimeout(() => checkKey(trimmed), 600)
+  debounceTimer = setTimeout(() => checkAndSave(trimmed), 600)
 })
 
-onMounted(() => {
-  if (apiKey.value.trim()) checkKey(apiKey.value.trim())
-})
-
-async function checkKey(key: string) {
+async function checkAndSave(key: string) {
   status.value = 'checking'
   try {
     await $fetch('/api/validate-key', { method: 'POST', body: { apiKey: key } })
-    if (apiKey.value.trim() === key) status.value = 'valid'
+    if (keyInput.value.trim() !== key) return
+
+    status.value = 'saving'
+    await $fetch('/api/settings/api-key', { method: 'POST', body: { apiKey: key } })
+    if (keyInput.value.trim() !== key) return
+
+    hasApiKey.value = true
+    keyInput.value = ''
+    status.value = 'idle'
   } catch (e) {
-    if (apiKey.value.trim() === key) {
+    if (keyInput.value.trim() === key) {
       status.value = 'invalid'
       errorText.value = extractErrorMessage(e, 'API 키를 확인할 수 없습니다.')
     }
+  }
+}
+
+async function removeKey() {
+  removing.value = true
+  try {
+    await $fetch('/api/settings/api-key', { method: 'DELETE' })
+    hasApiKey.value = false
+  } finally {
+    removing.value = false
   }
 }
 </script>
@@ -53,15 +69,7 @@ async function checkKey(key: string) {
         </div>
 
         <UBadge
-          v-if="status === 'valid'"
-          color="success"
-          variant="subtle"
-          icon="i-lucide-check-circle-2"
-        >
-          적용완료
-        </UBadge>
-        <UBadge
-          v-else-if="status === 'checking'"
+          v-if="status === 'checking' || status === 'saving'"
           color="neutral"
           variant="subtle"
         >
@@ -71,7 +79,7 @@ async function checkKey(key: string) {
               class="animate-spin"
             />
           </template>
-          확인 중...
+          {{ status === 'checking' ? '확인 중...' : '저장 중...' }}
         </UBadge>
         <UBadge
           v-else-if="status === 'invalid'"
@@ -81,16 +89,24 @@ async function checkKey(key: string) {
         >
           확인 필요
         </UBadge>
+        <UBadge
+          v-else-if="hasApiKey"
+          color="success"
+          variant="subtle"
+          icon="i-lucide-check-circle-2"
+        >
+          등록됨
+        </UBadge>
       </div>
     </template>
 
     <UFormField
-      label="Gemini API 키"
-      description="Google AI Studio에서 발급받은 API 키를 입력하세요. 이 브라우저에만 저장되며 서버에는 저장되지 않습니다."
+      :label="hasApiKey ? '새 API 키로 변경' : 'Gemini API 키'"
+      description="Google AI Studio에서 발급받은 API 키를 입력하세요. 암호화되어 서버에 저장되며, 저장 후에는 값이 다시 표시되지 않습니다."
       :error="status === 'invalid' ? errorText : undefined"
     >
       <UInput
-        v-model="apiKey"
+        v-model="keyInput"
         :type="showKey ? 'text' : 'password'"
         placeholder="AIza..."
         class="w-full"
@@ -109,16 +125,30 @@ async function checkKey(key: string) {
       </UInput>
     </UFormField>
 
-    <UButton
-      to="https://aistudio.google.com/apikey"
-      target="_blank"
-      variant="link"
-      color="neutral"
-      trailing-icon="i-lucide-external-link"
-      size="sm"
-      class="mt-1 px-0"
-    >
-      API 키 발급받기
-    </UButton>
+    <div class="flex items-center justify-between mt-1">
+      <UButton
+        to="https://aistudio.google.com/apikey"
+        target="_blank"
+        variant="link"
+        color="neutral"
+        trailing-icon="i-lucide-external-link"
+        size="sm"
+        class="px-0"
+      >
+        API 키 발급받기
+      </UButton>
+
+      <UButton
+        v-if="hasApiKey"
+        icon="i-lucide-trash-2"
+        variant="link"
+        color="error"
+        size="sm"
+        :loading="removing"
+        @click="removeKey"
+      >
+        키 삭제
+      </UButton>
+    </div>
   </UCard>
 </template>

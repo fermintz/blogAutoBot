@@ -1,13 +1,17 @@
-import type { BusinessInfo, GenerateRequest, GenerateResponse, LengthOption, ToneStyle } from '~~/shared/types'
+import type { BusinessInfo, GenerateRequest, GenerateResponse } from '~~/shared/types'
 
 export function useBlogGenerator() {
-  const apiKey = usePersistedState<string>('autoblog:apiKey', '')
-  const businessInfo = usePersistedState<BusinessInfo>('autoblog:businessInfo', {})
-  const tone = usePersistedState<ToneStyle>('autoblog:tone', 'friendly')
-  const length = usePersistedState<LengthOption>('autoblog:length', 'standard')
-  const footerText = usePersistedState<string>('autoblog:footerText', '')
-  const bodyTemplate = usePersistedState<string>('autoblog:bodyTemplate', DEFAULT_BODY_TEMPLATE)
-  const writingRules = usePersistedState<string>('autoblog:writingRules', '')
+  const {
+    loaded,
+    topic,
+    businessInfo,
+    tone,
+    length,
+    footerText,
+    bodyTemplates,
+    writingRules,
+    hasApiKey
+  } = useUserSettings()
 
   const mainKeyword = ref('')
   const relatedKeywordsInput = ref('')
@@ -21,7 +25,7 @@ export function useBlogGenerator() {
   const pending = ref(false)
   const errorMessage = ref('')
 
-  const canGenerate = computed(() => !!apiKey.value.trim() && !!mainKeyword.value.trim() && !pending.value)
+  const canGenerate = computed(() => hasApiKey.value && !!mainKeyword.value.trim() && !pending.value)
 
   function resetForm() {
     mainKeyword.value = ''
@@ -47,14 +51,14 @@ export function useBlogGenerator() {
       .filter(Boolean)
 
     const payload: GenerateRequest = {
-      apiKey: apiKey.value.trim(),
+      topic: topic.value,
       mainKeyword: mainKeyword.value.trim(),
       relatedKeywords,
       tone: tone.value,
       length: length.value,
       customTitle: customTitle.value.trim() || undefined,
       referenceContent: referenceContent.value.trim() || undefined,
-      bodyTemplate: bodyTemplate.value.trim() || undefined,
+      bodyTemplate: (bodyTemplates.value[topic.value] ?? DEFAULT_BODY_TEMPLATES[topic.value]).trim() || undefined,
       writingRules: writingRules.value.trim() || undefined,
       footerText: footerText.value.trim() || undefined,
       businessInfo: hasBusinessInfo(businessInfo.value) ? businessInfo.value : undefined
@@ -75,13 +79,14 @@ export function useBlogGenerator() {
   }
 
   return {
-    apiKey,
+    loaded,
+    topic,
     businessInfo,
     tone,
     length,
     footerText,
-    bodyTemplate,
     writingRules,
+    hasApiKey,
     mainKeyword,
     relatedKeywordsInput,
     referenceContent,

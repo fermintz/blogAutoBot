@@ -1,4 +1,4 @@
-import { LENGTH_OPTIONS, TONE_OPTIONS, type GenerateRequest } from '../../shared/types'
+import { LENGTH_OPTIONS, TONE_OPTIONS, TOPIC_BUSINESS_FIELDS, TOPIC_OPTIONS, type GenerateRequest } from '../../shared/types'
 
 const TONE_GUIDE: Record<string, string> = {
   friendly: '친한 친구에게 이야기하듯 편안한 구어체를 섞어 쓴다. "~했어요", "~더라구요" 같은 자연스러운 종결어미를 쓰고, 이모지는 과하지 않게 가끔만 사용한다.',
@@ -13,12 +13,14 @@ export function buildPrompt(req: GenerateRequest): string {
   const lengthOpt = LENGTH_OPTIONS.find(l => l.value === req.length)
   const lengthLabel = lengthOpt?.label ?? req.length
   const relatedKeywords = req.relatedKeywords.filter(k => k.trim().length > 0)
+  const topicLabel = TOPIC_OPTIONS.find(t => t.value === req.topic)?.label ?? req.topic
 
-  const businessInfoBlock = buildBusinessInfoBlock(req.businessInfo)
+  const businessInfoBlock = buildBusinessInfoBlock(req.topic, req.businessInfo)
 
   return `당신은 10년차 네이버 블로그 전업 작가입니다. 실제 사람이 직접 경험하고 쓴 것처럼 자연스러운 블로그 글을 작성합니다.
 
 ## 작성 대상
+- 글 주제 유형: ${topicLabel}
 - 메인 키워드: "${req.mainKeyword}"
 ${relatedKeywords.length > 0 ? `- 연관 키워드(본문 전반에 자연스럽게 분산 배치): ${relatedKeywords.join(', ')}` : ''}
 - 어조/스타일: ${toneLabel} — ${toneGuide}
@@ -113,20 +115,26 @@ function buildReferenceBlock(referenceContent?: string): string {
   return `아래는 사용자가 제공한 참조 내용이다. 여기 담긴 사실·정보·경험을 글의 근거로 활용하되, 문장을 그대로 베끼지 말고 앞서 정한 어조와 문체로 자연스럽게 녹여 쓴다.\n"""\n${trimmed}\n"""`
 }
 
-function buildBusinessInfoBlock(info?: GenerateRequest['businessInfo']): string {
-  if (!info || Object.values(info).every(v => !v)) {
-    return '별도로 입력된 업체/상품 정보는 없다. 특정 업체를 지어내지 말고 일반적인 정보/후기 관점에서 작성한다.'
+function buildBusinessInfoBlock(topic: GenerateRequest['topic'], info?: GenerateRequest['businessInfo']): string {
+  if (!info || Object.values(info).every(v => v === undefined || v === '')) {
+    return '별도로 입력된 업체/상품 정보는 없다. 특정 업체나 상품을 지어내지 말고 일반적인 정보/후기 관점에서 작성한다.'
   }
 
+  const fieldDefs = TOPIC_BUSINESS_FIELDS[topic]
   const lines: string[] = []
-  if (info.name) lines.push(`- 업체명: ${info.name}`)
-  if (info.address) lines.push(`- 주소: ${info.address}`)
-  if (info.phone) lines.push(`- 전화번호: ${info.phone}`)
-  if (info.hours) lines.push(`- 영업시간: ${info.hours}`)
-  if (info.services) lines.push(`- 주요 서비스/메뉴: ${info.services}`)
-  if (info.hasParking !== undefined) lines.push(`- 주차: ${info.hasParking ? '가능' : '불가/협소'}`)
-  if (info.mapUrl) lines.push(`- 지도 링크: ${info.mapUrl}`)
-  if (info.sns) lines.push(`- SNS/채널: ${info.sns}`)
+  for (const field of fieldDefs) {
+    const value = info[field.key]
+    if (value === undefined || value === '') continue
+    if (field.type === 'boolean') {
+      lines.push(`- ${field.label}: ${value ? '가능' : '불가/협소'}`)
+    } else {
+      lines.push(`- ${field.label}: ${value}`)
+    }
+  }
+
+  if (lines.length === 0) {
+    return '별도로 입력된 업체/상품 정보는 없다. 특정 업체나 상품을 지어내지 말고 일반적인 정보/후기 관점에서 작성한다.'
+  }
 
   return `아래 업체/상품 정보를 본문 중후반부에 자연스러운 문장이나 정리된 정보 블록으로 녹여 넣는다. 정보를 지어내거나 왜곡하지 말고 주어진 값만 사용한다.\n${lines.join('\n')}`
 }

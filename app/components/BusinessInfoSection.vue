@@ -1,12 +1,32 @@
 <script setup lang="ts">
-import type { BusinessInfo } from '~~/shared/types'
+import { TOPIC_BUSINESS_FIELDS, type BusinessInfo, type Topic } from '~~/shared/types'
+
+const props = defineProps<{
+  topic: Topic
+}>()
 
 const info = defineModel<BusinessInfo>({ required: true })
+
+const fields = computed(() => TOPIC_BUSINESS_FIELDS[props.topic])
 
 const parkingItems = [
   { label: '가능', value: true },
   { label: '불가/협소', value: false }
 ]
+
+function textValue(key: string): string | undefined {
+  const value = info.value[key]
+  return typeof value === 'string' ? value : undefined
+}
+
+function boolValue(key: string): boolean | undefined {
+  const value = info.value[key]
+  return typeof value === 'boolean' ? value : undefined
+}
+
+function setValue(key: string, value: string | boolean | undefined) {
+  info.value = { ...info.value, [key]: value }
+}
 </script>
 
 <template>
@@ -20,76 +40,35 @@ const parkingItems = [
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <UFormField label="업체명">
-        <UInput
-          v-model="info.name"
-          placeholder="예: OO카페"
-          class="w-full"
-        />
-      </UFormField>
-
-      <UFormField label="전화번호">
-        <UInput
-          v-model="info.phone"
-          placeholder="예: 02-1234-5678"
-          class="w-full"
-        />
-      </UFormField>
-
       <UFormField
-        label="주소"
-        class="sm:col-span-2"
+        v-for="field in fields"
+        :key="field.key"
+        :label="field.label"
+        :class="field.fullWidth ? 'sm:col-span-2' : undefined"
       >
-        <UInput
-          v-model="info.address"
-          placeholder="예: 서울시 강남구 ..."
-          class="w-full"
-        />
-      </UFormField>
-
-      <UFormField label="영업시간">
-        <UInput
-          v-model="info.hours"
-          placeholder="예: 매일 10:00 ~ 22:00"
-          class="w-full"
-        />
-      </UFormField>
-
-      <UFormField label="주차 여부">
         <USelect
-          v-model="info.hasParking"
+          v-if="field.type === 'boolean'"
+          :model-value="boolValue(field.key)"
           :items="parkingItems"
           value-key="value"
           placeholder="선택"
           class="w-full"
+          @update:model-value="(value) => setValue(field.key, value)"
         />
-      </UFormField>
-
-      <UFormField
-        label="주요 서비스/메뉴"
-        class="sm:col-span-2"
-      >
         <UTextarea
-          v-model="info.services"
+          v-else-if="field.type === 'textarea'"
+          :model-value="textValue(field.key)"
           :rows="2"
-          placeholder="예: 시그니처 라떼, 수제 케이크, 브런치 세트"
+          :placeholder="field.placeholder"
           class="w-full"
+          @update:model-value="(value) => setValue(field.key, value)"
         />
-      </UFormField>
-
-      <UFormField label="지도 URL">
         <UInput
-          v-model="info.mapUrl"
-          placeholder="네이버지도/구글지도 링크"
+          v-else
+          :model-value="textValue(field.key)"
+          :placeholder="field.placeholder"
           class="w-full"
-        />
-      </UFormField>
-
-      <UFormField label="SNS / 채널">
-        <UInput
-          v-model="info.sns"
-          placeholder="인스타그램, 블로그 링크 등"
-          class="w-full"
+          @update:model-value="(value) => setValue(field.key, value)"
         />
       </UFormField>
     </div>
