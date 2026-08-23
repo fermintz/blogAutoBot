@@ -26,14 +26,30 @@ useSeoMeta({
 
 <template>
   <UApp>
-    <header class="flex items-center justify-between px-5 h-18">
-      <div>
-        <NuxtLink
-          to="/"
-          class="flex text-2xl items-center gap-2 font-semibold focus-visible:outline-3 outline-primary/25 rounded-md p-1 -ms-1"
-        >
-          <span>블로그 API</span>
-        </NuxtLink>
+    <header class="flex items-center justify-between px-8 h-18">
+      <div class="flex items-center gap-12">
+        <div>
+          <NuxtLink
+            to="/"
+            class="flex text-2xl items-center gap-2 font-semibold focus-visible:outline-3 outline-primary/25 rounded-md p-1 -ms-1"
+          >
+            <span>블로그 API</span>
+          </NuxtLink>
+        </div>
+        <div class="flex items-center gap-5">
+          <NuxtLink
+            to="/"
+            active-class="text-primary"
+          >
+            글생성
+          </NuxtLink>
+          <NuxtLink
+            to="/seo-check"
+            active-class="text-primary"
+          >
+            SEO체크
+          </NuxtLink>
+        </div>
       </div>
       <div class="flex items-center gap-1">
         <UButton

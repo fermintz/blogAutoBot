@@ -18,6 +18,10 @@ function itemColor(item: SeoScoreResult['items'][number]): 'success' | 'warning'
   if (item.score === 0) return 'error'
   return 'warning'
 }
+
+function isExcluded(item: SeoScoreResult['items'][number]): boolean {
+  return item.max === 0
+}
 </script>
 
 <template>
@@ -58,9 +62,10 @@ function itemColor(item: SeoScoreResult['items'][number]): 'success' | 'warning'
       >
         <div class="flex items-center justify-between text-sm mb-1">
           <span class="font-medium">{{ item.label }}</span>
-          <span class="text-muted">{{ item.score }}/{{ item.max }}점</span>
+          <span class="text-muted">{{ isExcluded(item) ? '채점 제외' : `${item.score}/${item.max}점` }}</span>
         </div>
         <UProgress
+          v-if="!isExcluded(item)"
           :model-value="Math.round((item.score / item.max) * 100)"
           size="md"
           :color="itemColor(item)"

@@ -178,16 +178,16 @@ function scoreTagsCount(tags: string[]): SeoScoreItem {
 }
 
 function scoreBusinessInfo(body: string, info?: BusinessInfo): SeoScoreItem {
-  const max = 10
   const label = '업체 정보 반영'
   const fields = info
     ? Object.entries(info).filter(([key, v]) => key !== 'hasParking' && v !== undefined && v !== '' && v !== null)
     : []
 
   if (fields.length === 0) {
-    return { key: 'businessInfo', label, score: max, max, detail: '입력된 업체 정보가 없습니다.' }
+    return { key: 'businessInfo', label, score: 0, max: 0, detail: '입력된 업체 정보가 없어 채점에서 제외되었습니다.' }
   }
 
+  const max = 10
   const matched = fields.filter(([, v]) => typeof v === 'string' && body.includes(v))
   return {
     key: 'businessInfo',
