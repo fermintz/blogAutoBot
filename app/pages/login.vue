@@ -1,10 +1,22 @@
 <script setup lang="ts">
+const REMEMBER_EMAIL_KEY = 'autoblog:savedEmail'
+
 const client = useSupabaseClient()
 
 const email = ref('')
 const password = ref('')
+const showPassword = ref(false)
+const rememberEmail = ref(false)
 const pending = ref(false)
 const errorMessage = ref('')
+
+onMounted(() => {
+  const saved = localStorage.getItem(REMEMBER_EMAIL_KEY)
+  if (saved) {
+    email.value = saved
+    rememberEmail.value = true
+  }
+})
 
 async function login() {
   pending.value = true
@@ -19,6 +31,12 @@ async function login() {
     errorMessage.value = mapAuthErrorMessage(error.message)
     pending.value = false
     return
+  }
+
+  if (rememberEmail.value) {
+    localStorage.setItem(REMEMBER_EMAIL_KEY, email.value.trim())
+  } else {
+    localStorage.removeItem(REMEMBER_EMAIL_KEY)
   }
 
   await navigateTo('/')
@@ -63,12 +81,29 @@ async function login() {
         >
           <UInput
             v-model="password"
-            type="password"
+            :type="showPassword ? 'text' : 'password'"
             placeholder="비밀번호"
             autocomplete="current-password"
             class="w-full"
-          />
+          >
+            <template #trailing>
+              <UButton
+                :icon="showPassword ? 'i-lucide-eye-off' : 'i-lucide-eye'"
+                color="neutral"
+                variant="link"
+                size="sm"
+                :padded="false"
+                aria-label="비밀번호 보기"
+                @click="showPassword = !showPassword"
+              />
+            </template>
+          </UInput>
         </UFormField>
+
+        <UCheckbox
+          v-model="rememberEmail"
+          label="이메일 저장하기"
+        />
 
         <UAlert
           v-if="errorMessage"
