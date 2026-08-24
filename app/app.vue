@@ -39,7 +39,7 @@ useSeoMeta({
         <div class="flex items-center gap-5">
           <NuxtLink
             to="/"
-            active-class="text-primary"
+            active-class="text-primary font-medium"
           >
             글생성
           </NuxtLink>
