@@ -22,12 +22,13 @@ interface GeminiErrorBody {
   error?: { code?: number, message?: string, status?: string }
 }
 
-export async function callGemini(apiKey: string, prompt: string): Promise<{ title: string, body: string, tags: string[] }> {
+export async function callGemini(apiKey: string, systemPrompt: string, userPrompt: string): Promise<{ title: string, body: string, tags: string[] }> {
   const res = await fetch(`${GEMINI_ENDPOINT}?key=${encodeURIComponent(apiKey)}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      systemInstruction: { parts: [{ text: systemPrompt }] },
+      contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
       generationConfig: {
         responseMimeType: 'application/json',
         responseSchema: RESPONSE_SCHEMA,

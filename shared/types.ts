@@ -88,6 +88,25 @@ export const TOPIC_BUSINESS_FIELDS: Record<Topic, TopicFieldDef[]> = {
   ]
 }
 
+/** 네이버 검색(지역) API로 조회한 업체 후보 1건. 서비스 공용 키로 조회하며, 사용자별로 저장하지 않는다. */
+export interface NaverBusinessCandidate {
+  title: string
+  category: string
+  description: string
+  telephone: string
+  address: string
+  roadAddress: string
+  mapUrl: string
+}
+
+export interface BusinessLookupRequest {
+  query: string
+}
+
+export interface BusinessLookupResponse {
+  candidates: NaverBusinessCandidate[]
+}
+
 export interface GenerateRequest {
   topic: Topic
   mainKeyword: string

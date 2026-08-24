@@ -43,7 +43,7 @@ export default defineEventHandler(async (event): Promise<GenerateResponse> => {
   }
 
   const prompt = buildPrompt(req)
-  const result = await callGemini(apiKey, prompt)
+  const result = await callGemini(apiKey, prompt.system, prompt.user)
 
   if (req.customTitle) {
     result.title = req.customTitle
