@@ -123,18 +123,6 @@ async function login() {
           로그인
         </UButton>
       </form>
-
-      <template #footer>
-        <p class="text-sm text-muted text-center">
-          계정이 없으신가요?
-          <NuxtLink
-            to="/signup"
-            class="text-primary font-medium"
-          >
-            회원가입
-          </NuxtLink>
-        </p>
-      </template>
     </UCard>
   </UContainer>
 </template>

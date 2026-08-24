@@ -57,7 +57,8 @@ Supabase CLI 표준 마이그레이션 폴더. SQL 에디터나 `supabase db pus
 - **`app/utils/clipboard.ts`** — `copyToClipboard()`. `navigator.clipboard.writeText`가 권한 거부나 비보안 컨텍스트에서 조용히 실패하는 문제가 있어, 실패 시 `document.execCommand('copy')` 방식으로 자동 폴백한다. `ResultPanel.vue`의 복사 버튼이 이걸 쓴다.
 - **`app/utils/defaultBodyTemplate.ts`** — 주제별 기본 본문 템플릿(`DEFAULT_BODY_TEMPLATES: Record<Topic, string>`).
 - 이 세 파일(`seoScore.ts`, `clipboard.ts`, `defaultBodyTemplate.ts`)은 `app/utils`에 있어 어디서든 자동 임포트된다.
-- **페이지**: `app/pages/index.vue`(생성기 — 좌: 입력 폼(주제 탭 포함) / 우: SEO 점수·생성 결과, `lg` 브레이크포인트에서 2단), `app/pages/settings.vue`(API 키, 주제별 본문 템플릿, 작성 규칙), `app/pages/history.vue`(저장된 글 목록 + `UModal`로 상세보기, `ResultPanel`을 재사용), `app/pages/login.vue`/`signup.vue`(이메일+비밀번호), `app/pages/confirm.vue`(이메일 인증 콜백 랜딩). `/login`과 `/confirm` 외 모든 페이지는 `@nuxtjs/supabase`의 `redirectOptions`로 로그인이 필요하다(`/signup`만 예외로 열려 있음). 별도 인증 미들웨어 파일은 없다.
+- **페이지**: `app/pages/index.vue`(생성기 — 좌: 입력 폼(주제 탭 포함) / 우: SEO 점수·생성 결과, `lg` 브레이크포인트에서 2단), `app/pages/settings.vue`(API 키, 주제별 본문 템플릿, 작성 규칙), `app/pages/history.vue`(저장된 글 목록 + `UModal`로 상세보기, `ResultPanel`을 재사용), `app/pages/login.vue`/`signup.vue`(이메일+비밀번호), `app/pages/confirm.vue`(이메일 인증 콜백 랜딩). `/login`과 `/confirm` 외 모든 페이지는 `@nuxtjs/supabase`의 `redirectOptions`로 로그인이 필요하다. 별도 인증 미들웨어 파일은 없다.
+- **회원가입 비활성화(임시)**: 신규 가입을 막기 위해 `nuxt.config.ts`의 `supabase.redirectOptions.exclude`에서 `/signup`을 뺐다 — 로그인 안 된 사용자가 `/signup`에 들어오면 다른 보호된 페이지와 똑같이 `/login`으로 튕겨나간다. `signup.vue` 코드 자체와 `login.vue`의 "회원가입" 링크(제거함)는 그대로 남아있으니, 다시 열려면 `exclude`에 `/signup`을 되돌리고 `login.vue`에 링크를 복원하면 된다. 계정은 당분간 Supabase 대시보드/SQL에서 운영자가 직접 추가한다.
 
 ## 컨벤션
 

@@ -13,7 +13,7 @@ useHead({
   }
 })
 
-const title = '네이버 블로그 글 자동생성기'
+const title = 'BLog Gem'
 const description = '키워드와 업체 정보를 입력하면 SEO에 최적화된 네이버 블로그 글 초안을 자동으로 생성해드립니다.'
 
 useSeoMeta({
@@ -33,7 +33,7 @@ useSeoMeta({
             to="/"
             class="flex text-2xl items-center gap-2 font-semibold focus-visible:outline-3 outline-primary/25 rounded-md p-1 -ms-1"
           >
-            <span>블로그 API</span>
+            <span>Blog Gem</span>
           </NuxtLink>
         </div>
         <div class="flex items-center gap-5">
