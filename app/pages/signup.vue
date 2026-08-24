@@ -97,6 +97,7 @@ async function signup() {
         <UFormField
           label="비밀번호"
           description="6자 이상 입력해주세요."
+          :ui="{ wrapper: 'flex flex-col gap-1', description: 'text-xs text-gray-500', container: 'mt-3' }"
           required
         >
           <UInput

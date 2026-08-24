@@ -71,6 +71,7 @@ function resetForm() {
             <UFormField
               label="제목"
               description="네이버 블로그에 등록할(또는 등록한) 글 제목을 입력하세요."
+              :ui="{ wrapper: 'flex flex-col gap-1', description: 'text-xs text-gray-500', container: 'mt-3' }"
               required
             >
               <UInput
@@ -83,6 +84,7 @@ function resetForm() {
             <UFormField
               label="본문"
               description="검토하고 싶은 블로그 글 본문을 그대로 붙여넣으세요."
+              :ui="{ wrapper: 'flex flex-col gap-1', description: 'text-xs text-gray-500', container: 'mt-3' }"
               required
             >
               <UTextarea
@@ -96,6 +98,7 @@ function resetForm() {
             <UFormField
               label="태그"
               description="글에 사용한 해시태그를 쉼표(,)로 구분해 입력하세요."
+              :ui="{ wrapper: 'flex flex-col gap-1', description: 'text-xs text-gray-500', container: 'mt-3' }"
             >
               <UInput
                 v-model="tagsInput"
@@ -109,6 +112,7 @@ function resetForm() {
             <UFormField
               label="메인 키워드"
               description="글이 노출되길 원하는 핵심 키워드입니다."
+              :ui="{ wrapper: 'flex flex-col gap-1', description: 'text-xs text-gray-500', container: 'mt-3' }"
             >
               <UInput
                 v-model="mainKeyword"
@@ -120,6 +124,7 @@ function resetForm() {
             <UFormField
               label="연관 키워드"
               description="본문에 반영했는지 확인할 연관 키워드를 쉼표(,)로 구분해 입력하세요."
+              :ui="{ wrapper: 'flex flex-col gap-1', description: 'text-xs text-gray-500', container: 'mt-3' }"
             >
               <UInput
                 v-model="relatedKeywordsInput"

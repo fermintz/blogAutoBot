@@ -103,6 +103,7 @@ async function removeKey() {
     <UFormField
       :label="hasApiKey ? '새 API 키로 변경' : 'Gemini API 키'"
       description="Google AI Studio에서 발급받은 API 키를 입력하세요. 암호화되어 서버에 저장되며, 저장 후에는 값이 다시 표시되지 않습니다."
+      :ui="{ wrapper: 'flex flex-col gap-1', description: 'text-xs text-gray-500', container: 'mt-3' }"
       :error="status === 'invalid' ? errorText : undefined"
     >
       <UInput
