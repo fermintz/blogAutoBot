@@ -78,15 +78,17 @@ const seoScore = computed(() => {
           <div class="space-y-6">
             <TopicSection v-model="topic" />
             <USeparator />
-            <TitleSection v-model="customTitle" />
-            <USeparator />
+            
             <KeywordSection
               v-model:main-keyword="mainKeyword"
               v-model:related-keywords-input="relatedKeywordsInput"
             />
             <USeparator />
+            <TitleSection v-model="customTitle" />
+            <USeparator />
             <ReferenceSection v-model="referenceContent" />
             <USeparator />
+            
             <StyleSection
               v-model:tone="tone"
               v-model:length="length"

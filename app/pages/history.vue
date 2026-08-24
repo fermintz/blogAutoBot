@@ -61,16 +61,17 @@ function formatDate(timestamp: string) {
       v-else-if="items.length"
       class="space-y-3"
     >
-      <UCard
+      <div
         v-for="item in items"
         :key="item.id"
+        class="border rounded-lg p-4 border-gray-200"
       >
         <div class="flex items-center justify-between gap-4">
           <div class="min-w-0">
             <p class="font-semibold truncate">
               {{ item.title }}
             </p>
-            <div class="flex items-center gap-2 mt-1 text-sm text-muted">
+            <div class="flex items-center gap-2 mt-2 text-sm text-muted">
               <UBadge
                 color="neutral"
                 variant="subtle"
@@ -102,7 +103,7 @@ function formatDate(timestamp: string) {
             />
           </div>
         </div>
-      </UCard>
+      </div>
     </div>
 
     <UCard
@@ -139,7 +140,25 @@ function formatDate(timestamp: string) {
       v-model:open="isOpen"
       :title="selected?.title"
       :description="selected ? formatDate(selected.createdAt) : undefined"
+      :ui="{
+        content: 'max-w-3xl',
+        wrapper: 'min-w-0 flex-1 pe-10',
+        title: 'break-words',
+        header: 'min-h-auto'
+      }"
     >
+      <template #header="{close}">
+        <div class="flex items-center w-full gap-5">
+          <div class="flex flex-col gap-0.5 flex-1">
+            <span class="font-medium">{{ selected?.title }}</span>
+            <span class="text-sm text-gray-500">
+              {{ selected ? formatDate(selected.createdAt) : undefined }} 작성됨
+            </span>
+          </div>
+          <UButton @click="close" icon="mdi:close" color="neutral" >
+          </UButton>
+        </div>
+      </template>
       <template #body>
         <ResultPanel
           v-if="selected"
