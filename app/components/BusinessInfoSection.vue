@@ -28,7 +28,7 @@ function setValue(key: string, value: string | boolean | undefined) {
   info.value = { ...info.value, [key]: value }
 }
 
-const searchQuery = computed(() => [textValue('name'), textValue('address')].filter(Boolean).join(' ').trim())
+const searchQuery = computed(() => (textValue('name') ?? '').trim())
 const lookupPending = ref(false)
 const lookupError = ref('')
 const candidates = ref<NaverBusinessCandidate[]>([])
@@ -39,6 +39,7 @@ async function lookup() {
 
   lookupPending.value = true
   lookupError.value = ''
+  candidates.value = []
 
   try {
     const res = await $fetch<BusinessLookupResponse>('/api/business-lookup', {
@@ -72,25 +73,12 @@ function applyCandidate(candidate: NaverBusinessCandidate) {
 
 <template>
   <div>
-    <div class="flex items-center justify-between gap-2 mb-3">
-      <div class="flex items-center gap-2">
-        <UIcon
-          name="i-lucide-store"
-          class="size-4 text-muted"
-        />
-        <span class="text-sm font-medium">업체 및 상품 정보 (선택)</span>
-      </div>
-      <UButton
-        icon="i-lucide-search"
-        variant="subtle"
-        color="neutral"
-        size="xs"
-        :loading="lookupPending"
-        :disabled="!searchQuery || lookupPending"
-        @click="lookup"
-      >
-        네이버에서 조회
-      </UButton>
+    <div class="flex items-center gap-2 mb-3">
+      <UIcon
+        name="i-lucide-store"
+        class="size-4 text-muted"
+      />
+      <span class="text-sm font-medium">업체 및 상품 정보 (선택)</span>
     </div>
 
     <p
@@ -130,7 +118,24 @@ function applyCandidate(candidate: NaverBusinessCandidate) {
           :placeholder="field.placeholder"
           class="w-full"
           @update:model-value="(value) => setValue(field.key, value)"
-        />
+        >
+          <template
+            v-if="field.key === 'name'"
+            #trailing
+          >
+            <UButton
+              icon="i-lucide-search"
+              color="neutral"
+              variant="link"
+              size="sm"
+              :padded="false"
+              :loading="lookupPending"
+              :disabled="!searchQuery || lookupPending"
+              aria-label="네이버에서 업체 조회"
+              @click="lookup"
+            />
+          </template>
+        </UInput>
       </UFormField>
     </div>
 

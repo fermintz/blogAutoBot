@@ -33,6 +33,8 @@ export function useUserSettings() {
   })
 
   async function fetchSettings() {
+    await client.auth.getSession()
+
     const { data } = await client
       .from('user_settings')
       .select('topic, business_info_by_topic, body_templates, writing_rules, tone, length, footer_text, api_key_encrypted')
@@ -52,9 +54,9 @@ export function useUserSettings() {
   }
 
   async function saveSettings() {
-    if (!loaded.value || !user.value) return
+    if (!loaded.value || !user.value?.sub) return
     await client.from('user_settings').upsert({
-      user_id: user.value.id,
+      user_id: user.value.sub,
       topic: topic.value,
       business_info_by_topic: businessInfoByTopic.value,
       body_templates: bodyTemplates.value,
