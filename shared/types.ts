@@ -27,13 +27,13 @@ export const TOPIC_OPTIONS = [
 export type Topic = typeof TOPIC_OPTIONS[number]['value']
 
 /** 업체/상품 정보는 주제마다 필요한 항목이 달라 키가 고정되지 않은 값 맵으로 다룬다. */
-export type BusinessInfo = Record<string, string | boolean | undefined>
+export type BusinessInfo = Record<string, string | undefined>
 
 export interface TopicFieldDef {
   key: string
   label: string
   placeholder: string
-  type: 'text' | 'textarea' | 'boolean'
+  type: 'text' | 'textarea'
   fullWidth?: boolean
 }
 
@@ -43,18 +43,18 @@ export const TOPIC_BUSINESS_FIELDS: Record<Topic, TopicFieldDef[]> = {
     { key: 'phone', label: '전화번호', placeholder: '예: 02-1234-5678', type: 'text' },
     { key: 'address', label: '주소', placeholder: '예: 서울시 강남구 ...', type: 'text', fullWidth: true },
     { key: 'hours', label: '영업시간', placeholder: '예: 매일 10:00 ~ 22:00', type: 'text' },
-    { key: 'hasParking', label: '주차 여부', placeholder: '', type: 'boolean' },
+    { key: 'parking', label: '주차 안내', placeholder: '예: 건물 내 주차 가능 / 인근 OO공영주차장 이용', type: 'text' },
     { key: 'services', label: '주요 메뉴', placeholder: '예: 시그니처 라떼, 수제 케이크, 브런치 세트', type: 'textarea', fullWidth: true },
-    { key: 'mapUrl', label: '지도 URL', placeholder: '네이버지도/구글지도 링크', type: 'text' }
+    { key: 'mapUrl', label: '지도 URL', placeholder: '네이버지도/구글지도 링크', type: 'text', fullWidth: true }
   ],
   travel: [
     { key: 'name', label: '여행지/장소명', placeholder: '예: OO해변', type: 'text' },
     { key: 'address', label: '위치/주소', placeholder: '예: 강원도 속초시 ...', type: 'text', fullWidth: true },
     { key: 'hours', label: '이용시간/추천 방문시기', placeholder: '예: 연중무휴, 일출 명소로 새벽 방문 추천', type: 'text' },
     { key: 'price', label: '입장료/비용', placeholder: '예: 무료 / 성인 5,000원', type: 'text' },
-    { key: 'hasParking', label: '주차 여부', placeholder: '', type: 'boolean' },
+    { key: 'parking', label: '주차 안내', placeholder: '예: 건물 내 주차 가능 / 인근 OO공영주차장 이용', type: 'text' },
     { key: 'services', label: '주요 볼거리/코스', placeholder: '예: 전망대, 산책로, 포토스팟', type: 'textarea', fullWidth: true },
-    { key: 'mapUrl', label: '지도 URL', placeholder: '네이버지도/구글지도 링크', type: 'text' }
+    { key: 'mapUrl', label: '지도 URL', placeholder: '네이버지도/구글지도 링크', type: 'text', fullWidth: true }
   ],
   tour: [
     { key: 'name', label: '투어/상품명', placeholder: '예: OO 시티투어 버스', type: 'text' },
@@ -62,7 +62,7 @@ export const TOPIC_BUSINESS_FIELDS: Record<Topic, TopicFieldDef[]> = {
     { key: 'hours', label: '소요시간/운행시간', placeholder: '예: 약 3시간, 매일 09:00·13:00 출발', type: 'text' },
     { key: 'price', label: '가격', placeholder: '예: 성인 30,000원', type: 'text' },
     { key: 'services', label: '코스/일정 및 포함사항', placeholder: '예: A코스-B코스-C코스, 가이드 동행, 생수 제공', type: 'textarea', fullWidth: true },
-    { key: 'mapUrl', label: '예약 링크', placeholder: '예약 페이지 URL', type: 'text' }
+    { key: 'mapUrl', label: '예약 링크', placeholder: '예약 페이지 URL', type: 'text', fullWidth: true }
   ],
   ticket: [
     { key: 'name', label: '티켓/공연명', placeholder: '예: OO 전시회 입장권', type: 'text' },
@@ -70,7 +70,7 @@ export const TOPIC_BUSINESS_FIELDS: Record<Topic, TopicFieldDef[]> = {
     { key: 'hours', label: '이용기간/시간', placeholder: '예: 2026.1.1 ~ 12.31, 10:00~18:00', type: 'text' },
     { key: 'price', label: '가격', placeholder: '예: 성인 15,000원 / 청소년 10,000원', type: 'text' },
     { key: 'services', label: '이용 안내/유의사항', placeholder: '예: 현장수령, 신분증 지참, 우천 시 취소 불가', type: 'textarea', fullWidth: true },
-    { key: 'mapUrl', label: '예매 링크', placeholder: '예매 페이지 URL', type: 'text' }
+    { key: 'mapUrl', label: '예매 링크', placeholder: '예매 페이지 URL', type: 'text', fullWidth: true }
   ],
   stay: [
     { key: 'name', label: '숙소명', placeholder: '예: OO펜션', type: 'text' },
@@ -78,9 +78,9 @@ export const TOPIC_BUSINESS_FIELDS: Record<Topic, TopicFieldDef[]> = {
     { key: 'address', label: '주소', placeholder: '예: 강원도 평창군 ...', type: 'text', fullWidth: true },
     { key: 'hours', label: '체크인/체크아웃', placeholder: '예: 체크인 15:00 / 체크아웃 11:00', type: 'text' },
     { key: 'price', label: '가격대', placeholder: '예: 비수기 10만원~ / 성수기 20만원~', type: 'text' },
-    { key: 'hasParking', label: '주차 여부', placeholder: '', type: 'boolean' },
+    { key: 'parking', label: '주차 안내', placeholder: '예: 건물 내 주차 가능 / 인근 OO공영주차장 이용', type: 'text' },
     { key: 'services', label: '객실 타입/부대시설', placeholder: '예: 스탠다드룸, 바베큐장, 수영장', type: 'textarea', fullWidth: true },
-    { key: 'mapUrl', label: '예약 링크', placeholder: '네이버예약/부킹 링크', type: 'text' }
+    { key: 'mapUrl', label: '예약 링크', placeholder: '네이버예약/부킹 링크', type: 'text', fullWidth: true }
   ],
   product: [
     { key: 'name', label: '상품명', placeholder: '예: OO 무선 이어폰', type: 'text' },
@@ -121,7 +121,6 @@ export interface GenerateRequest {
   referenceContent?: string
   bodyTemplate?: string
   writingRules?: string
-  footerText?: string
   businessInfo?: BusinessInfo
 }
 
@@ -148,6 +147,5 @@ export interface UserSettings {
   writingRules: string
   tone: ToneStyle
   length: LengthOption
-  footerText: string
   hasApiKey: boolean
 }

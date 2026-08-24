@@ -7,7 +7,6 @@ interface UserSettingsRow {
   writing_rules: string | null
   tone: ToneStyle
   length: LengthOption
-  footer_text: string | null
   api_key_encrypted: string | null
 }
 
@@ -22,7 +21,6 @@ export function useUserSettings() {
   const writingRules = useState('autoblog:settings-rules', () => '')
   const tone = useState<ToneStyle>('autoblog:settings-tone', () => 'friendly')
   const length = useState<LengthOption>('autoblog:settings-length', () => 'standard')
-  const footerText = useState('autoblog:settings-footer', () => '')
   const hasApiKey = useState('autoblog:settings-haskey', () => false)
 
   const businessInfo = computed<BusinessInfo>({
@@ -37,7 +35,7 @@ export function useUserSettings() {
 
     const { data } = await client
       .from('user_settings')
-      .select('topic, business_info_by_topic, body_templates, writing_rules, tone, length, footer_text, api_key_encrypted')
+      .select('topic, business_info_by_topic, body_templates, writing_rules, tone, length, api_key_encrypted')
       .maybeSingle<UserSettingsRow>()
 
     if (data) {
@@ -47,7 +45,6 @@ export function useUserSettings() {
       writingRules.value = data.writing_rules ?? ''
       tone.value = data.tone
       length.value = data.length
-      footerText.value = data.footer_text ?? ''
       hasApiKey.value = data.api_key_encrypted !== null
     }
     loaded.value = true
@@ -62,8 +59,7 @@ export function useUserSettings() {
       body_templates: bodyTemplates.value,
       writing_rules: writingRules.value,
       tone: tone.value,
-      length: length.value,
-      footer_text: footerText.value
+      length: length.value
     }, { onConflict: 'user_id' })
   }
 
@@ -73,7 +69,7 @@ export function useUserSettings() {
     })
 
     let saveTimer: ReturnType<typeof setTimeout> | undefined
-    watch([topic, businessInfoByTopic, bodyTemplates, writingRules, tone, length, footerText], () => {
+    watch([topic, businessInfoByTopic, bodyTemplates, writingRules, tone, length], () => {
       if (!loaded.value) return
       if (saveTimer) clearTimeout(saveTimer)
       saveTimer = setTimeout(saveSettings, 600)
@@ -89,7 +85,6 @@ export function useUserSettings() {
     writingRules,
     tone,
     length,
-    footerText,
     hasApiKey,
     refresh: fetchSettings
   }

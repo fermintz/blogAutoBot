@@ -38,7 +38,6 @@ export default defineEventHandler(async (event): Promise<GenerateResponse> => {
     referenceContent: body.referenceContent?.trim(),
     bodyTemplate: body.bodyTemplate?.trim(),
     writingRules: body.writingRules?.trim(),
-    footerText: body.footerText?.trim(),
     businessInfo: body.businessInfo
   }
 

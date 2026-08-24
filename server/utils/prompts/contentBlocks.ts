@@ -57,11 +57,7 @@ export function buildBusinessInfoBlock(topic: GenerateRequest['topic'], info?: G
   for (const field of fieldDefs) {
     const value = info[field.key]
     if (value === undefined || value === '') continue
-    if (field.type === 'boolean') {
-      lines.push(`- ${field.label}: ${value ? '가능' : '불가/협소'}`)
-    } else {
-      lines.push(`- ${field.label}: ${value}`)
-    }
+    lines.push(`- ${field.label}: ${value}`)
   }
 
   if (lines.length === 0) {

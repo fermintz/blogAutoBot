@@ -7,7 +7,6 @@ export function useBlogGenerator() {
     businessInfo,
     tone,
     length,
-    footerText,
     bodyTemplates,
     writingRules,
     hasApiKey
@@ -35,7 +34,6 @@ export function useBlogGenerator() {
     tone.value = 'friendly'
     length.value = 'standard'
     businessInfo.value = {}
-    footerText.value = ''
   }
 
   async function generate() {
@@ -60,7 +58,6 @@ export function useBlogGenerator() {
       referenceContent: referenceContent.value.trim() || undefined,
       bodyTemplate: (bodyTemplates.value[topic.value] ?? DEFAULT_BODY_TEMPLATES[topic.value]).trim() || undefined,
       writingRules: writingRules.value.trim() || undefined,
-      footerText: footerText.value.trim() || undefined,
       businessInfo: hasBusinessInfo(businessInfo.value) ? businessInfo.value : undefined
     }
 
@@ -84,7 +81,6 @@ export function useBlogGenerator() {
     businessInfo,
     tone,
     length,
-    footerText,
     writingRules,
     hasApiKey,
     mainKeyword,

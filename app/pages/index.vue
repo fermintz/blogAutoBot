@@ -6,7 +6,6 @@ const {
   businessInfo,
   tone,
   length,
-  footerText,
   mainKeyword,
   relatedKeywordsInput,
   referenceContent,
@@ -97,8 +96,6 @@ const seoScore = computed(() => {
               v-model="businessInfo"
               :topic="topic"
             />
-            <USeparator />
-            <FooterTextSection v-model="footerText" />
           </div>
 
           <template #footer>

@@ -7,7 +7,6 @@ create table if not exists public.user_settings (
   writing_rules text not null default '',
   tone text not null default 'friendly',
   length text not null default 'standard',
-  footer_text text not null default '',
   updated_at timestamptz not null default now()
 );
 

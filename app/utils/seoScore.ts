@@ -180,7 +180,7 @@ function scoreTagsCount(tags: string[]): SeoScoreItem {
 function scoreBusinessInfo(body: string, info?: BusinessInfo): SeoScoreItem {
   const label = '업체 정보 반영'
   const fields = info
-    ? Object.entries(info).filter(([key, v]) => key !== 'hasParking' && v !== undefined && v !== '' && v !== null)
+    ? Object.entries(info).filter(([, v]) => v !== undefined && v !== '' && v !== null)
     : []
 
   if (fields.length === 0) {
