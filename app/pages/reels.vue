@@ -7,7 +7,6 @@ const {
   purpose,
   hookStyle,
   canGenerate,
-  canRegenerate,
   result,
   pending,
   regenerating,
