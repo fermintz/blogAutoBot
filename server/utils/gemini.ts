@@ -1,7 +1,9 @@
+import type { ReelsCaption, ReelsScriptResult, ReelsScriptSegment } from '../../shared/types'
+
 const GEMINI_MODEL = 'gemini-3.6-flash'
 const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`
 
-const RESPONSE_SCHEMA = {
+const BLOG_RESPONSE_SCHEMA = {
   type: 'OBJECT',
   properties: {
     title: { type: 'STRING' },
@@ -9,6 +11,40 @@ const RESPONSE_SCHEMA = {
     tags: { type: 'ARRAY', items: { type: 'STRING' } }
   },
   required: ['title', 'body', 'tags']
+}
+
+const REELS_CAPTION_SCHEMA = {
+  type: 'OBJECT',
+  properties: {
+    start: { type: 'NUMBER' },
+    end: { type: 'NUMBER' },
+    text: { type: 'STRING' },
+    sceneGuide: { type: 'STRING' }
+  },
+  required: ['start', 'end', 'text', 'sceneGuide']
+}
+
+const REELS_SEGMENT_SCHEMA = {
+  type: 'OBJECT',
+  properties: {
+    timeRange: { type: 'STRING' },
+    narration: { type: 'STRING' },
+    captions: { type: 'ARRAY', items: REELS_CAPTION_SCHEMA }
+  },
+  required: ['timeRange', 'narration', 'captions']
+}
+
+const REELS_RESPONSE_SCHEMA = {
+  type: 'OBJECT',
+  properties: {
+    title: { type: 'STRING' },
+    coverText: { type: 'STRING' },
+    hook: REELS_SEGMENT_SCHEMA,
+    body: REELS_SEGMENT_SCHEMA,
+    cta: REELS_SEGMENT_SCHEMA,
+    hashtags: { type: 'ARRAY', items: { type: 'STRING' } }
+  },
+  required: ['title', 'coverText', 'hook', 'body', 'cta', 'hashtags']
 }
 
 interface GeminiSuccessBody {
@@ -22,7 +58,8 @@ interface GeminiErrorBody {
   error?: { code?: number, message?: string, status?: string }
 }
 
-export async function callGemini(apiKey: string, systemPrompt: string, userPrompt: string): Promise<{ title: string, body: string, tags: string[] }> {
+/** fetch → 에러 매핑 → JSON 파싱까지만 담당하는 공용 저수준 호출. 필드별 필수값 검증은 각 호출부가 한다. */
+async function callGeminiJson<T>(apiKey: string, systemPrompt: string, userPrompt: string, schema: object, temperature = 1): Promise<T> {
   const res = await fetch(`${GEMINI_ENDPOINT}?key=${encodeURIComponent(apiKey)}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -31,8 +68,8 @@ export async function callGemini(apiKey: string, systemPrompt: string, userPromp
       contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
       generationConfig: {
         responseMimeType: 'application/json',
-        responseSchema: RESPONSE_SCHEMA,
-        temperature: 1
+        responseSchema: schema,
+        temperature
       }
     })
   })
@@ -52,12 +89,15 @@ export async function callGemini(apiKey: string, systemPrompt: string, userPromp
     throw createError({ statusCode: 502, statusMessage: 'AI 응답을 받지 못했습니다. 잠시 후 다시 시도해주세요.' })
   }
 
-  let parsed: { title?: string, body?: string, tags?: string[] }
   try {
-    parsed = JSON.parse(text)
+    return JSON.parse(text) as T
   } catch {
     throw createError({ statusCode: 502, statusMessage: 'AI 응답 형식을 해석하지 못했습니다. 다시 시도해주세요.' })
   }
+}
+
+export async function callGemini(apiKey: string, systemPrompt: string, userPrompt: string): Promise<{ title: string, body: string, tags: string[] }> {
+  const parsed = await callGeminiJson<{ title?: string, body?: string, tags?: string[] }>(apiKey, systemPrompt, userPrompt, BLOG_RESPONSE_SCHEMA)
 
   if (!parsed.title || !parsed.body) {
     throw createError({ statusCode: 502, statusMessage: 'AI가 완전한 글을 생성하지 못했습니다. 다시 시도해주세요.' })
@@ -67,6 +107,55 @@ export async function callGemini(apiKey: string, systemPrompt: string, userPromp
     title: parsed.title,
     body: parsed.body,
     tags: Array.isArray(parsed.tags) ? parsed.tags : []
+  }
+}
+
+/** Gemini는 스키마상 captions[].id를 만들지 않는다(중복/누락 위험을 피하려 서버에서 생성). */
+interface RawReelsCaption { start?: number, end?: number, text?: string, sceneGuide?: string }
+interface RawReelsSegment { timeRange?: string, narration?: string, captions?: RawReelsCaption[] }
+
+interface CompleteReelsCaption { start: number, end: number, text: string, sceneGuide: string }
+interface CompleteReelsSegment { timeRange: string, narration: string, captions: CompleteReelsCaption[] }
+
+function isCompleteCaption(caption?: RawReelsCaption): caption is CompleteReelsCaption {
+  return typeof caption?.start === 'number' && typeof caption.end === 'number' && !!caption.text && !!caption.sceneGuide
+}
+
+function isCompleteReelsSegment(segment?: RawReelsSegment): segment is CompleteReelsSegment {
+  return !!segment?.timeRange && !!segment.narration
+    && Array.isArray(segment.captions) && segment.captions.length > 0 && segment.captions.every(isCompleteCaption)
+}
+
+function toReelsSegment(idPrefix: string, segment: CompleteReelsSegment): ReelsScriptSegment {
+  return {
+    timeRange: segment.timeRange,
+    narration: segment.narration,
+    captions: segment.captions.map((caption, idx): ReelsCaption => ({
+      id: `${idPrefix}-${idx + 1}`,
+      start: caption.start,
+      end: caption.end,
+      text: caption.text,
+      sceneGuide: caption.sceneGuide
+    }))
+  }
+}
+
+export async function callGeminiReelsScript(apiKey: string, systemPrompt: string, userPrompt: string, options?: { temperature?: number }): Promise<ReelsScriptResult> {
+  const parsed = await callGeminiJson<{ title?: string, coverText?: string, hook?: RawReelsSegment, body?: RawReelsSegment, cta?: RawReelsSegment, hashtags?: string[] }>(
+    apiKey, systemPrompt, userPrompt, REELS_RESPONSE_SCHEMA, options?.temperature ?? 1
+  )
+
+  if (!parsed.title || !parsed.coverText || !isCompleteReelsSegment(parsed.hook) || !isCompleteReelsSegment(parsed.body) || !isCompleteReelsSegment(parsed.cta)) {
+    throw createError({ statusCode: 502, statusMessage: 'AI가 완전한 대본을 생성하지 못했습니다. 다시 시도해주세요.' })
+  }
+
+  return {
+    title: parsed.title,
+    coverText: parsed.coverText,
+    hook: toReelsSegment('hook', parsed.hook),
+    body: toReelsSegment('body', parsed.body),
+    cta: toReelsSegment('cta', parsed.cta),
+    hashtags: Array.isArray(parsed.hashtags) ? parsed.hashtags : []
   }
 }
 

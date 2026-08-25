@@ -56,16 +56,11 @@ export function useHistory() {
     items.value = items.value.filter(item => item.id !== id)
   }
 
-  async function clear() {
-    await client.from('articles').delete().not('id', 'is', null)
-    items.value = []
-  }
-
   if (import.meta.client) {
     onMounted(() => {
       if (!loaded.value) fetchItems()
     })
   }
 
-  return { items, loaded, add, remove, clear }
+  return { items, loaded, add, remove }
 }

@@ -9,6 +9,10 @@ const info = defineModel<BusinessInfo>({ required: true })
 
 const fields = computed(() => TOPIC_BUSINESS_FIELDS[props.topic])
 
+/** 네이버 지역 검색은 실존 업체/장소를 찾는 API라 투어·티켓·상품명 같은 상품 단위 이름과는 맞지 않아 이 주제들에서는 검색 버튼을 숨긴다. */
+const SEARCHABLE_TOPICS = new Set<Topic>(['restaurant', 'travel', 'stay'])
+const isSearchable = computed(() => SEARCHABLE_TOPICS.has(props.topic))
+
 function textValue(key: string): string | undefined {
   return info.value[key]
 }
@@ -98,10 +102,10 @@ function applyCandidate(candidate: NaverBusinessCandidate) {
           :placeholder="field.placeholder"
           class="w-full"
           @update:model-value="(value) => setValue(field.key, value)"
-          @keyup.enter="field.key === 'name' && lookup()"
+          @keyup.enter="field.key === 'name' && isSearchable && lookup()"
         >
           <template
-            v-if="field.key === 'name'"
+            v-if="field.key === 'name' && isSearchable"
             #trailing
           >
             <UButton

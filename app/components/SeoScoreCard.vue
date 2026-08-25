@@ -55,7 +55,7 @@ function isExcluded(item: SeoScoreResult['items'][number]): boolean {
       />
     </div>
 
-    <ul class="space-y-3">
+    <ul class="grid grid-cols-2 gap-x-6 space-y-5">
       <li
         v-for="item in score.items"
         :key="item.key"

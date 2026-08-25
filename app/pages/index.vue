@@ -161,6 +161,8 @@ const seoScore = computed(() => {
             </p>
           </div>
         </UCard>
+
+        <SavedArticlesSection />
       </div>
     </div>
   </UContainer>

@@ -49,16 +49,15 @@ useSeoMeta({
           >
             SEO체크
           </NuxtLink>
+          <NuxtLink
+            to="/reels"
+            active-class="text-primary"
+          >
+            릴스자막
+          </NuxtLink>
         </div>
       </div>
       <div class="flex items-center gap-1">
-        <UButton
-          to="/history"
-          icon="i-lucide-archive"
-          aria-label="저장된 글"
-          color="neutral"
-          variant="ghost"
-        />
         <UButton
           to="/settings"
           icon="i-lucide-settings"

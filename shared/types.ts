@@ -143,6 +143,112 @@ export interface SavedArticle {
   tags: string[]
 }
 
+export const REELS_LENGTH_OPTIONS = [
+  { value: 'short', label: '15~30초', hookSeconds: '3~5초', bodySeconds: '10~20초', ctaSeconds: '2~5초' },
+  { value: 'medium', label: '30~60초', hookSeconds: '3~6초', bodySeconds: '22~48초', ctaSeconds: '3~6초' },
+  { value: 'long', label: '60~90초', hookSeconds: '4~7초', bodySeconds: '48~78초', ctaSeconds: '4~8초' }
+] as const
+
+export type ReelsLength = typeof REELS_LENGTH_OPTIONS[number]['value']
+
+export const REELS_TONE_OPTIONS = [
+  { value: 'informative', label: '정보 전달형' },
+  { value: 'storytelling', label: '스토리텔링형' },
+  { value: 'humorous', label: '유머러스·트렌디' }
+] as const
+
+export type ReelsTone = typeof REELS_TONE_OPTIONS[number]['value']
+
+export const REELS_SPEECH_STYLE_OPTIONS = [
+  { value: 'friendly', label: '친근한 말투' },
+  { value: 'professional', label: '전문적인 말투' },
+  { value: 'plain', label: '담백한 말투' },
+  { value: 'conversational', label: '자연스러운 대화체' },
+  { value: 'punchy', label: '짧고 강한 말투' }
+] as const
+
+export type ReelsSpeechStyle = typeof REELS_SPEECH_STYLE_OPTIONS[number]['value']
+
+export const REELS_PURPOSE_OPTIONS = [
+  { value: 'inform', label: '정보 전달' },
+  { value: 'visit', label: '방문 유도' },
+  { value: 'product', label: '제품/서비스 소개' },
+  { value: 'review', label: '후기/리뷰' },
+  { value: 'experience', label: '경험 공유' },
+  { value: 'views', label: '조회수 중심' },
+  { value: 'saveShare', label: '저장/공유 유도' }
+] as const
+
+export type ReelsPurpose = typeof REELS_PURPOSE_OPTIONS[number]['value']
+
+export const REELS_HOOK_STYLE_OPTIONS = [
+  { value: 'curiosity', label: '궁금증 유발형' },
+  { value: 'twist', label: '반전형' },
+  { value: 'problem', label: '문제 제기형' },
+  { value: 'statistic', label: '숫자/통계형' },
+  { value: 'strongClaim', label: '강한 주장형' },
+  { value: 'experience', label: '경험 공유형' },
+  { value: 'comparison', label: '비교형' },
+  { value: 'question', label: '질문형' }
+] as const
+
+export type ReelsHookStyle = typeof REELS_HOOK_STYLE_OPTIONS[number]['value']
+
+/** 릴스 대본 생성 원문 입력 글자수 제한. 클라이언트 입력 UI와 서버 검증이 이 상수를 공유한다. */
+export const REELS_SOURCE_TEXT_MIN_LENGTH = 100
+export const REELS_SOURCE_TEXT_MAX_LENGTH = 12000
+
+/** 화면에 노출되는 자막 한 덩어리. 내레이션의 요약이 아니라, 내레이션을 실제 말하는 호흡 단위로 나눈 한 조각이다. start/end는 해당 세그먼트(HOOK/BODY/CTA) 시작을 0초로 하는 상대 초 단위. sceneGuide는 이 자막과 함께 노출하면 좋은 추천 화면이며, 여러 자막이 한 장면을 공유하면 같은 문구가 반복될 수 있다. */
+export interface ReelsCaption {
+  id: string
+  start: number
+  end: number
+  text: string
+  sceneGuide: string
+}
+
+/** HOOK/BODY/CTA 한 구간의 대본 데이터. */
+export interface ReelsScriptSegment {
+  timeRange: string
+  narration: string
+  captions: ReelsCaption[]
+}
+
+export interface ReelsScriptResult {
+  title: string
+  coverText: string
+  hook: ReelsScriptSegment
+  body: ReelsScriptSegment
+  cta: ReelsScriptSegment
+  hashtags: string[]
+}
+
+export interface ReelsSettings {
+  length: ReelsLength
+  tone: ReelsTone
+  speechStyle: ReelsSpeechStyle
+  purpose: ReelsPurpose
+  hookStyle: ReelsHookStyle
+}
+
+export interface ReelsScriptRequest {
+  sourceText: string
+  settings: ReelsSettings
+  /** "다시 생성" 요청 여부. true면 이전 결과와 다른 표현으로 재생성하도록 프롬프트에 반영한다. */
+  regenerate?: boolean
+  /** regenerate가 true일 때만 채워지는 직전 생성 결과(재생성 시 참고용). */
+  previousResult?: ReelsScriptResult
+}
+
+/** 브라우저 localStorage에 저장되는 릴스 대본 생성 이력 1건. */
+export interface SavedReelsScript {
+  id: string
+  createdAt: string
+  sourceText: string
+  settings: ReelsSettings
+  result: ReelsScriptResult
+}
+
 /** 계정별로 서버(Supabase)에 저장되는 글 설정 기본값. API 키는 값 자체가 아니라 등록 여부만 노출한다. */
 export interface UserSettings {
   topic: Topic
