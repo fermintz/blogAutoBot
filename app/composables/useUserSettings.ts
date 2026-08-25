@@ -8,6 +8,8 @@ interface UserSettingsRow {
   tone: ToneStyle
   length: LengthOption
   api_key_encrypted: string | null
+  sponsor_disclosure: string | null
+  bridge_url_template: string | null
 }
 
 export function useUserSettings() {
@@ -22,6 +24,8 @@ export function useUserSettings() {
   const tone = useState<ToneStyle>('autoblog:settings-tone', () => 'friendly')
   const length = useState<LengthOption>('autoblog:settings-length', () => 'standard')
   const hasApiKey = useState('autoblog:settings-haskey', () => false)
+  const sponsorDisclosure = useState('autoblog:settings-sponsor', () => '')
+  const bridgeUrlTemplate = useState('autoblog:settings-bridge', () => '')
 
   const businessInfo = computed<BusinessInfo>({
     get: () => businessInfoByTopic.value[topic.value] ?? {},
@@ -35,7 +39,7 @@ export function useUserSettings() {
 
     const { data } = await client
       .from('user_settings')
-      .select('topic, business_info_by_topic, body_templates, writing_rules, tone, length, api_key_encrypted')
+      .select('topic, business_info_by_topic, body_templates, writing_rules, tone, length, api_key_encrypted, sponsor_disclosure, bridge_url_template')
       .maybeSingle<UserSettingsRow>()
 
     if (data) {
@@ -46,6 +50,8 @@ export function useUserSettings() {
       tone.value = data.tone
       length.value = data.length
       hasApiKey.value = data.api_key_encrypted !== null
+      sponsorDisclosure.value = data.sponsor_disclosure ?? ''
+      bridgeUrlTemplate.value = data.bridge_url_template ?? ''
     }
     loaded.value = true
   }
@@ -59,7 +65,9 @@ export function useUserSettings() {
       body_templates: bodyTemplates.value,
       writing_rules: writingRules.value,
       tone: tone.value,
-      length: length.value
+      length: length.value,
+      sponsor_disclosure: sponsorDisclosure.value,
+      bridge_url_template: bridgeUrlTemplate.value
     }, { onConflict: 'user_id' })
   }
 
@@ -69,7 +77,7 @@ export function useUserSettings() {
     })
 
     let saveTimer: ReturnType<typeof setTimeout> | undefined
-    watch([topic, businessInfoByTopic, bodyTemplates, writingRules, tone, length], () => {
+    watch([topic, businessInfoByTopic, bodyTemplates, writingRules, tone, length, sponsorDisclosure, bridgeUrlTemplate], () => {
       if (!loaded.value) return
       if (saveTimer) clearTimeout(saveTimer)
       saveTimer = setTimeout(saveSettings, 600)
@@ -86,6 +94,8 @@ export function useUserSettings() {
     tone,
     length,
     hasApiKey,
+    sponsorDisclosure,
+    bridgeUrlTemplate,
     refresh: fetchSettings
   }
 }

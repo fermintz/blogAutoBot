@@ -9,13 +9,24 @@ export function useBlogGenerator() {
     length,
     bodyTemplates,
     writingRules,
-    hasApiKey
+    hasApiKey,
+    sponsorDisclosure,
+    bridgeUrlTemplate
   } = useUserSettings()
 
   const mainKeyword = ref('')
   const relatedKeywordsInput = ref('')
   const referenceContent = ref('')
   const customTitle = ref('')
+  const purchaseLinkUrl = ref('')
+  const purchaseLinkLabel = ref('지금 구매하러 가기 👉')
+
+  const purchaseLinkBlock = computed(() => {
+    const converted = buildBridgeUrl(bridgeUrlTemplate.value, purchaseLinkUrl.value)
+    if (!converted) return undefined
+    const label = purchaseLinkLabel.value.trim()
+    return label ? `${label} ${converted}` : converted
+  })
 
   const { add: addHistoryItem } = useHistory()
 
@@ -34,6 +45,8 @@ export function useBlogGenerator() {
     tone.value = 'friendly'
     length.value = 'standard'
     businessInfo.value = {}
+    purchaseLinkUrl.value = ''
+    purchaseLinkLabel.value = '지금 구매하러 가기 👉'
   }
 
   async function generate() {
@@ -58,7 +71,9 @@ export function useBlogGenerator() {
       referenceContent: referenceContent.value.trim() || undefined,
       bodyTemplate: (bodyTemplates.value[topic.value] ?? DEFAULT_BODY_TEMPLATES[topic.value]).trim() || undefined,
       writingRules: writingRules.value.trim() || undefined,
-      businessInfo: hasBusinessInfo(businessInfo.value) ? businessInfo.value : undefined
+      businessInfo: hasBusinessInfo(businessInfo.value) ? businessInfo.value : undefined,
+      sponsorDisclosure: sponsorDisclosure.value.trim() || undefined,
+      purchaseLinkBlock: purchaseLinkBlock.value
     }
 
     try {
@@ -87,6 +102,9 @@ export function useBlogGenerator() {
     relatedKeywordsInput,
     referenceContent,
     customTitle,
+    purchaseLinkUrl,
+    purchaseLinkLabel,
+    bridgeUrlTemplate,
     result,
     lastRequest,
     pending,

@@ -122,6 +122,10 @@ export interface GenerateRequest {
   bodyTemplate?: string
   writingRules?: string
   businessInfo?: BusinessInfo
+  /** 대가성 문구 등 AI가 다듬지 않고 입력한 그대로 본문 맨 아래에 붙여야 하는 문구. */
+  sponsorDisclosure?: string
+  /** 브릿지 서버로 변환된 제휴 링크 CTA 문구(라벨+URL). 완성된 형태로 본문 하단에 그대로 삽입한다. */
+  purchaseLinkBlock?: string
 }
 
 export interface GenerateResponse {
@@ -148,4 +152,8 @@ export interface UserSettings {
   tone: ToneStyle
   length: LengthOption
   hasApiKey: boolean
+  /** 대가성 문구 기본 템플릿. 비어있지 않으면 생성마다 본문 맨 아래에 그대로 자동 삽입된다. */
+  sponsorDisclosure: string
+  /** 제휴 링크를 브릿지 서버로 변환할 URL 템플릿. {URL}은 인코딩된 원본 링크, {RAW_URL}은 원본 링크 그대로. */
+  bridgeUrlTemplate: string
 }

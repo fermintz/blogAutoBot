@@ -38,7 +38,9 @@ export default defineEventHandler(async (event): Promise<GenerateResponse> => {
     referenceContent: body.referenceContent?.trim(),
     bodyTemplate: body.bodyTemplate?.trim(),
     writingRules: body.writingRules?.trim(),
-    businessInfo: body.businessInfo
+    businessInfo: body.businessInfo,
+    sponsorDisclosure: body.sponsorDisclosure?.trim(),
+    purchaseLinkBlock: body.purchaseLinkBlock?.trim()
   }
 
   const prompt = buildPrompt(req)
@@ -46,6 +48,12 @@ export default defineEventHandler(async (event): Promise<GenerateResponse> => {
 
   if (req.customTitle) {
     result.title = req.customTitle
+  }
+
+  // AI가 다듬거나 왜곡하지 않도록, 대가성 문구와 변환된 제휴 링크는 생성 이후 원문 그대로 덧붙인다.
+  const trailingBlocks = [req.purchaseLinkBlock, req.sponsorDisclosure].filter((b): b is string => !!b)
+  if (trailingBlocks.length > 0) {
+    result.body = `${result.body}\n\n${trailingBlocks.join('\n\n')}`
   }
 
   return result

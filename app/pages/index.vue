@@ -10,6 +10,9 @@ const {
   relatedKeywordsInput,
   referenceContent,
   customTitle,
+  purchaseLinkUrl,
+  purchaseLinkLabel,
+  bridgeUrlTemplate,
   result,
   lastRequest,
   pending,
@@ -97,6 +100,12 @@ const seoScore = computed(() => {
             <BusinessInfoSection
               v-model="businessInfo"
               :topic="topic"
+            />
+            <USeparator />
+            <PurchaseLinkSection
+              v-model:original-url="purchaseLinkUrl"
+              v-model:label="purchaseLinkLabel"
+              :bridge-url-template="bridgeUrlTemplate"
             />
           </div>
 
