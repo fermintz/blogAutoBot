@@ -83,7 +83,6 @@ const {
         <ReelsResultPanel
           v-else-if="result"
           :result="result"
-          :can-regenerate="canRegenerate"
           @regenerate="regenerate"
           @reset="resetResult"
         />
