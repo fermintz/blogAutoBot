@@ -74,13 +74,13 @@ function formatDate(timestamp: string) {
             {{ item.title }}
           </p>
           <div class="flex items-center gap-2 mt-1 text-xs text-muted">
-            <UBadge
+            <!-- <UBadge
               color="neutral"
               variant="subtle"
               size="sm"
             >
               {{ item.mainKeyword }}
-            </UBadge>
+            </UBadge> -->
             <span>{{ formatDate(item.createdAt) }}</span>
             <span>· {{ item.body.length.toLocaleString() }}자</span>
           </div>
