@@ -9,9 +9,10 @@ export function useBlogGenerator() {
     length,
     bodyTemplates,
     writingRules,
-    hasApiKey,
-    bridgeUrlTemplate
+    hasApiKey
   } = useUserSettings()
+
+  const bridgeUrlTemplate = useRuntimeConfig().public.bridgeUrlTemplate
 
   const mainKeyword = ref('')
   const relatedKeywordsInput = ref('')
@@ -22,7 +23,7 @@ export function useBlogGenerator() {
   const sponsorDisclosure = ref('')
 
   const purchaseLinkBlock = computed(() => {
-    const converted = buildBridgeUrl(bridgeUrlTemplate.value, purchaseLinkUrl.value)
+    const converted = buildBridgeUrl(bridgeUrlTemplate, purchaseLinkUrl.value)
     if (!converted) return undefined
     const label = purchaseLinkLabel.value.trim()
     return label ? `${label} ${converted}` : converted

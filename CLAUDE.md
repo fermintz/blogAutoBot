@@ -21,6 +21,7 @@
 - `SUPABASE_URL`, `SUPABASE_KEY`(anon/public 키) — `@nuxtjs/supabase` 모듈이 자동으로 읽는다.
 - `NUXT_API_KEY_ENCRYPTION_SECRET` — API 키 암호화용 서버 전용 비밀키. `nuxt.config.ts`의 `runtimeConfig.apiKeyEncryptionSecret`로 매핑되며 클라이언트에는 절대 노출되지 않는다.
 - `NUXT_NAVER_CLIENT_ID` / `NUXT_NAVER_CLIENT_SECRET` — 네이버 검색(지역) API 자격. Gemini 키와 달리 **사용자별이 아니라 서비스 공용 키**다(운영자가 네이버 개발자센터에서 1회 발급해 서버 환경변수로만 등록, DB 저장·암호화 없음). `runtimeConfig.naverClientId`/`naverClientSecret`로 매핑되며 `server/utils/naver.ts`에서만 읽는다.
+- `NUXT_PUBLIC_BRIDGE_URL_TEMPLATE` — 제휴 링크를 감쌀 브릿지(우회) 서버 URL 템플릿(`{URL}`=인코딩된 원본 링크, `{RAW_URL}`=원본 링크 그대로). 네이버 API 키와 마찬가지로 **사용자별이 아니라 서비스 전체에 동일하게 적용되는 공용 값**이라 DB에 저장하지 않고 `runtimeConfig.public.bridgeUrlTemplate`로만 매핑한다. `public`이므로 클라이언트에도 그대로 노출되며(비밀값 아님), `useBlogGenerator.ts`가 `useRuntimeConfig().public.bridgeUrlTemplate`로 읽어 `app/utils/bridgeLink.ts`의 `buildBridgeUrl()`에 넘긴다. 이 값을 만드는 리다이렉트 엔드포인트 자체는 `server/routes/go.get.ts`(`/go?url=...` → 302)로, 같은 앱을 Vercel 등에 배포하면 별도 인프라 없이 함께 배포된다.
 - `.env.example`에 형식이 문서화되어 있다. 실제 값은 커밋하지 않는다.
 
 ### Supabase 스키마 (`supabase/migrations/`)

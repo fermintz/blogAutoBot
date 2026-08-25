@@ -1,19 +1,18 @@
 <script setup lang="ts">
-const bridgeUrlTemplate = defineModel<string>({ required: true })
+defineProps<{
+  bridgeUrlTemplate: string
+}>()
 </script>
 
 <template>
-  <UFormField>
-    <div class="mb-3 text-gray-500">
-      쿠팡파트너스 등 제휴 링크를 본인이 구축한 브릿지(우회) 서버를 거치도록 변환할 URL 형식입니다.
-      <code class="px-1 rounded bg-gray-100">{URL}</code> 자리에는 원본 링크가 URL 인코딩되어 들어가고,
-      인코딩 없이 원본 링크를 그대로 넣고 싶으면 <code class="px-1 rounded bg-gray-100">{RAW_URL}</code>을 사용하세요.
-      비워두면 글쓰기 화면의 "구매 링크 변환" 기능이 동작하지 않습니다.
-    </div>
-    <UInput
-      v-model="bridgeUrlTemplate"
-      placeholder="예: https://mybridge.example.com/go?url={URL}"
-      class="w-full"
-    />
-  </UFormField>
+  <div class="text-gray-500 text-sm">
+    <template v-if="bridgeUrlTemplate">
+      쿠팡파트너스 등 제휴 링크를 서비스에 등록된 브릿지(우회) 서버를 거치도록 자동 변환합니다.
+      계정마다 따로 설정할 필요 없이 모든 사용자에게 아래 형식이 동일하게 적용됩니다.
+      <code class="block mt-2 px-2 py-1.5 rounded bg-gray-100 text-xs break-all">{{ bridgeUrlTemplate }}</code>
+    </template>
+    <template v-else>
+      아직 서비스에 브릿지 링크가 설정되지 않아 "구매 링크 변환" 기능을 사용할 수 없습니다. 운영자에게 문의해주세요.
+    </template>
+  </div>
 </template>

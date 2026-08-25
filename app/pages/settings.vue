@@ -1,5 +1,6 @@
 <script setup lang="ts">
-const { loaded, bodyTemplates, writingRules, hasApiKey, bridgeUrlTemplate } = useUserSettings()
+const { loaded, bodyTemplates, writingRules, hasApiKey } = useUserSettings()
+const { public: { bridgeUrlTemplate } } = useRuntimeConfig()
 </script>
 
 <template>
@@ -74,7 +75,7 @@ const { loaded, bodyTemplates, writingRules, hasApiKey, bridgeUrlTemplate } = us
           </div>
         </template>
 
-        <BridgeUrlSection v-model="bridgeUrlTemplate" />
+        <BridgeUrlSection :bridge-url-template="bridgeUrlTemplate" />
       </UCard>
     </div>
 

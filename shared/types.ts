@@ -258,6 +258,4 @@ export interface UserSettings {
   tone: ToneStyle
   length: LengthOption
   hasApiKey: boolean
-  /** 제휴 링크를 브릿지 서버로 변환할 URL 템플릿. {URL}은 인코딩된 원본 링크, {RAW_URL}은 원본 링크 그대로. */
-  bridgeUrlTemplate: string
 }

@@ -15,7 +15,10 @@ export default defineNuxtConfig({
   runtimeConfig: {
     apiKeyEncryptionSecret: '',
     naverClientId: '',
-    naverClientSecret: ''
+    naverClientSecret: '',
+    public: {
+      bridgeUrlTemplate: ''
+    }
   },
 
   compatibilityDate: '2026-06-30',

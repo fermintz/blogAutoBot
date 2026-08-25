@@ -18,7 +18,6 @@ export interface Database {
           tone: string
           length: string
           footer_text: string
-          bridge_url_template: string
           updated_at: string
         }
         Insert: {
@@ -31,7 +30,6 @@ export interface Database {
           tone?: string
           length?: string
           footer_text?: string
-          bridge_url_template?: string
           updated_at?: string
         }
         Update: {
@@ -44,7 +42,6 @@ export interface Database {
           tone?: string
           length?: string
           footer_text?: string
-          bridge_url_template?: string
           updated_at?: string
         }
         Relationships: []

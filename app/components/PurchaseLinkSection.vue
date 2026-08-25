@@ -32,8 +32,7 @@ async function copyConverted() {
       color="neutral"
       variant="subtle"
       icon="i-lucide-info"
-      description="설정 페이지에서 브릿지 링크 형식을 먼저 등록해주세요."
-      :actions="[{ label: '설정으로 이동', to: '/settings', color: 'neutral' }]"
+      description="아직 서비스에 브릿지 링크가 설정되지 않아 이 기능을 사용할 수 없습니다."
     />
     <template v-else>
       <UInput
