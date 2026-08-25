@@ -1,5 +1,5 @@
 export function usePersistedState<T>(key: string, defaultValue: T) {
-  const state = ref<T>(defaultValue) as Ref<T>
+  const state = useState<T>(key, () => defaultValue)
 
   if (import.meta.client) {
     onMounted(() => {

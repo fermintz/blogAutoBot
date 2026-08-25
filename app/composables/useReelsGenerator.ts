@@ -3,10 +3,10 @@ import type { ReelsHookStyle, ReelsLength, ReelsPurpose, ReelsScriptRequest, Ree
 
 export function useReelsGenerator() {
   const sourceText = ref('')
-  const length = ref<ReelsLength>('short')
-  const tone = ref<ReelsTone>('storytelling')
+  const length = ref<ReelsLength>('medium')
+  const tone = ref<ReelsTone>('informative')
   const speechStyle = ref<ReelsSpeechStyle>('friendly')
-  const purpose = ref<ReelsPurpose>('review')
+  const purpose = ref<ReelsPurpose>('inform')
   const hookStyle = ref<ReelsHookStyle>('curiosity')
 
   const settings = computed<ReelsSettings>(() => ({

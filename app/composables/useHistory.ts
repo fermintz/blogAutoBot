@@ -26,17 +26,24 @@ export function useHistory() {
   const client = useSupabaseClient()
   const items = useState<SavedArticle[]>('autoblog:history-items', () => [])
   const loaded = useState('autoblog:history-loaded', () => false)
+  const fetching = useState('autoblog:history-fetching', () => false)
 
   async function fetchItems() {
-    const { data } = await client
-      .from('articles')
-      .select('id, created_at, main_keyword, title, body, tags')
-      .order('created_at', { ascending: false })
-      .limit(MAX_HISTORY_ITEMS)
-      .returns<ArticleRow[]>()
+    if (fetching.value) return
+    fetching.value = true
+    try {
+      const { data } = await client
+        .from('articles')
+        .select('id, created_at, main_keyword, title, body, tags')
+        .order('created_at', { ascending: false })
+        .limit(MAX_HISTORY_ITEMS)
+        .returns<ArticleRow[]>()
 
-    items.value = data?.map(mapRow) ?? []
-    loaded.value = true
+      items.value = data?.map(mapRow) ?? []
+      loaded.value = true
+    } finally {
+      fetching.value = false
+    }
   }
 
   async function add(mainKeyword: string, result: GenerateResponse) {
