@@ -12,6 +12,7 @@ const {
   customTitle,
   purchaseLinkUrl,
   purchaseLinkLabel,
+  sponsorDisclosure,
   bridgeUrlTemplate,
   result,
   lastRequest,
@@ -107,6 +108,8 @@ const seoScore = computed(() => {
               v-model:label="purchaseLinkLabel"
               :bridge-url-template="bridgeUrlTemplate"
             />
+            <USeparator />
+            <SponsorDisclosureSection v-model="sponsorDisclosure" />
           </div>
 
           <template #footer>

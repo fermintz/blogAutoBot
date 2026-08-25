@@ -10,7 +10,6 @@ export function useBlogGenerator() {
     bodyTemplates,
     writingRules,
     hasApiKey,
-    sponsorDisclosure,
     bridgeUrlTemplate
   } = useUserSettings()
 
@@ -20,6 +19,7 @@ export function useBlogGenerator() {
   const customTitle = ref('')
   const purchaseLinkUrl = ref('')
   const purchaseLinkLabel = ref('지금 구매하러 가기 👉')
+  const sponsorDisclosure = ref('')
 
   const purchaseLinkBlock = computed(() => {
     const converted = buildBridgeUrl(bridgeUrlTemplate.value, purchaseLinkUrl.value)
@@ -47,6 +47,7 @@ export function useBlogGenerator() {
     businessInfo.value = {}
     purchaseLinkUrl.value = ''
     purchaseLinkLabel.value = '지금 구매하러 가기 👉'
+    sponsorDisclosure.value = ''
   }
 
   async function generate() {
@@ -104,6 +105,7 @@ export function useBlogGenerator() {
     customTitle,
     purchaseLinkUrl,
     purchaseLinkLabel,
+    sponsorDisclosure,
     bridgeUrlTemplate,
     result,
     lastRequest,

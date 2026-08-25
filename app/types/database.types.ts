@@ -18,7 +18,6 @@ export interface Database {
           tone: string
           length: string
           footer_text: string
-          sponsor_disclosure: string
           bridge_url_template: string
           updated_at: string
         }
@@ -32,7 +31,6 @@ export interface Database {
           tone?: string
           length?: string
           footer_text?: string
-          sponsor_disclosure?: string
           bridge_url_template?: string
           updated_at?: string
         }
@@ -46,7 +44,6 @@ export interface Database {
           tone?: string
           length?: string
           footer_text?: string
-          sponsor_disclosure?: string
           bridge_url_template?: string
           updated_at?: string
         }

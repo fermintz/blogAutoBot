@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { loaded, bodyTemplates, writingRules, hasApiKey, sponsorDisclosure, bridgeUrlTemplate } = useUserSettings()
+const { loaded, bodyTemplates, writingRules, hasApiKey, bridgeUrlTemplate } = useUserSettings()
 </script>
 
 <template>
@@ -59,22 +59,6 @@ const { loaded, bodyTemplates, writingRules, hasApiKey, sponsorDisclosure, bridg
         </template>
 
         <WritingRulesSection v-model="writingRules" />
-      </UCard>
-
-      <UCard>
-        <template #header>
-          <div class="flex items-center gap-2">
-            <UIcon
-              name="i-lucide-hand-coins"
-              class="size-5"
-            />
-            <h2 class="font-semibold">
-              대가성 문구
-            </h2>
-          </div>
-        </template>
-
-        <SponsorDisclosureSection v-model="sponsorDisclosure" />
       </UCard>
 
       <UCard>
