@@ -158,6 +158,7 @@ function formatDate(timestamp: string) {
         v-if="selected"
         :result="selected.result"
         :store-info="selected.storeInfo"
+        :topic="selected.topic"
         hide-actions
         class="border-0 shadow-none ring-0 p-0"
       />

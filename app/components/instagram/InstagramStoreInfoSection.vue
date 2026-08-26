@@ -1,7 +1,37 @@
 <script setup lang="ts">
-import type { NaverBusinessCandidate, StoreInfo } from '~~/shared/types'
+import { INSTAGRAM_SEARCHABLE_TOPICS, INSTAGRAM_STORE_FIELDS, INSTAGRAM_STORE_NAME_LABEL, type InstagramTopic, type NaverBusinessCandidate, type StoreInfo } from '~~/shared/types'
+
+const props = defineProps<{
+  topic: InstagramTopic
+}>()
 
 const info = defineModel<StoreInfo>({ required: true })
+
+const SECTION_TITLE: Record<InstagramTopic, string> = {
+  restaurant: '매장 정보',
+  cafe: '카페 정보',
+  travel: '여행지 정보',
+  stay: '숙소 정보',
+  exhibition: '전시 정보',
+  product: '상품 정보',
+  etc: '장소 정보'
+}
+
+const NAME_PLACEHOLDER: Record<InstagramTopic, string> = {
+  restaurant: '예: 하녹',
+  cafe: '예: 온설재',
+  travel: '예: 청사포 다릿돌전망대',
+  stay: '예: OO펜션',
+  exhibition: '예: OO 특별전',
+  product: '예: OO 무선 이어폰',
+  etc: '예: OO'
+}
+
+const nameLabel = computed(() => INSTAGRAM_STORE_NAME_LABEL[props.topic])
+const detailFields = computed(() => INSTAGRAM_STORE_FIELDS[props.topic].filter(f => f.key !== 'address'))
+const addressField = computed(() => INSTAGRAM_STORE_FIELDS[props.topic].find(f => f.key === 'address'))
+/** 네이버 지역 검색은 실존 장소를 찾는 API라 상품(product) 카테고리처럼 장소가 아닌 경우엔 검색 버튼을 숨긴다. */
+const isSearchable = computed(() => INSTAGRAM_SEARCHABLE_TOPICS.includes(props.topic))
 
 function setValue(key: keyof StoreInfo, value: string | undefined) {
   info.value = { ...info.value, [key]: value }
@@ -14,11 +44,7 @@ function applyCandidate(candidate: NaverBusinessCandidate) {
   info.value = {
     ...info.value,
     name: candidate.title,
-    category: candidate.category || info.value.category,
-    description: candidate.description || info.value.description,
-    address: candidate.roadAddress || candidate.address || info.value.address,
-    phone: candidate.telephone || info.value.phone,
-    placeUrl: candidate.mapUrl || info.value.placeUrl
+    address: candidate.roadAddress || candidate.address || info.value.address
   }
   isModalOpen.value = false
 }
@@ -31,7 +57,7 @@ function applyCandidate(candidate: NaverBusinessCandidate) {
         name="i-lucide-store"
         class="size-4 text-muted"
       />
-      <span class="text-sm font-medium">매장 정보</span>
+      <span class="text-sm font-medium">{{ SECTION_TITLE[topic] }}</span>
     </div>
 
     <p
@@ -42,17 +68,20 @@ function applyCandidate(candidate: NaverBusinessCandidate) {
     </p>
 
     <UFormField
-      label="매장명"
+      :label="nameLabel"
       required
     >
       <UInput
         :model-value="info.name"
-        placeholder="예: 하녹"
+        :placeholder="NAME_PLACEHOLDER[topic]"
         class="w-full"
         @update:model-value="(value) => setValue('name', String(value))"
-        @keyup.enter="lookup(searchQuery, '매장 정보를 조회하지 못했습니다.')"
+        @keyup.enter="isSearchable && lookup(searchQuery, '정보를 조회하지 못했습니다.')"
       >
-        <template #trailing>
+        <template
+          v-if="isSearchable"
+          #trailing
+        >
           <UButton
             icon="i-lucide-search"
             color="neutral"
@@ -62,122 +91,52 @@ function applyCandidate(candidate: NaverBusinessCandidate) {
             :loading="lookupPending"
             :disabled="!searchQuery || lookupPending"
             class="disabled:cursor-default"
-            aria-label="네이버에서 매장 조회"
-            @click="lookup(searchQuery, '매장 정보를 조회하지 못했습니다.')"
+            aria-label="네이버에서 조회"
+            @click="lookup(searchQuery, '정보를 조회하지 못했습니다.')"
           />
         </template>
       </UInput>
-      <template #hint>
-        <span class="text-xs text-muted">검색 버튼으로 매장명·카테고리·업체 설명·주소·전화번호·지도링크를 자동으로 채울 수 있어요.</span>
+      <template
+        v-if="isSearchable"
+        #hint
+      >
+        <span class="text-xs text-muted">검색 버튼으로 {{ nameLabel }}·주소를 자동으로 채울 수 있어요.</span>
       </template>
     </UFormField>
 
-    <UFormField label="카테고리">
-      <UInput
-        :model-value="info.category"
-        placeholder="예: 카페,디저트"
-        class="w-full"
-        @update:model-value="(value) => setValue('category', value ? String(value) : undefined)"
-      />
-    </UFormField>
-
     <UFormField
-      label="업체 설명"
-      description="네이버 검색 결과의 짧은 소개 문구입니다. 검색으로 채워지며 직접 수정할 수 있어요."
-      :ui="{ wrapper: 'flex flex-col gap-1', description: 'text-xs text-gray-500' }"
+      v-if="addressField"
+      :label="addressField.label"
     >
-      <UTextarea
-        :model-value="info.description"
-        :rows="2"
-        placeholder="예: 부산 수영구 광안리에 위치한 한옥 감성 빙수 카페"
-        class="w-full"
-        @update:model-value="(value) => setValue('description', value ? String(value) : undefined)"
-      />
-    </UFormField>
-
-    <UFormField label="전화번호">
-      <UInput
-        :model-value="info.phone"
-        placeholder="예: 02-1234-5678"
-        class="w-full"
-        @update:model-value="(value) => setValue('phone', value ? String(value) : undefined)"
-      />
-    </UFormField>
-
-    <UFormField label="한국어 주소">
       <UInput
         :model-value="info.address"
-        placeholder="예: 부산 기장군 기장읍 내리길 146-5"
+        :placeholder="addressField.placeholder"
         class="w-full"
         @update:model-value="(value) => setValue('address', value ? String(value) : undefined)"
       />
     </UFormField>
 
-    <UFormField
-      label="영문 주소"
-      description="네이버 API에서 제공하지 않는 정보입니다. 필요하면 직접 입력해주세요."
-      :ui="{ wrapper: 'flex flex-col gap-1', description: 'text-xs text-gray-500' }"
-    >
-      <UInput
-        :model-value="info.englishAddress"
-        placeholder="예: 146-5, Naeri-gil, Gijang-eup, Gijang-gun, Busan"
-        class="w-full"
-        @update:model-value="(value) => setValue('englishAddress', value ? String(value) : undefined)"
-      />
-    </UFormField>
-
-    <UFormField
-      label="영업시간"
-      description="네이버 API에서 제공하지 않는 정보입니다. 필요하면 직접 입력해주세요."
-      :ui="{ wrapper: 'flex flex-col gap-1', description: 'text-xs text-gray-500' }"
-    >
-      <UInput
-        :model-value="info.businessHours"
-        placeholder="예: 11:00 - 20:00 (토,일 - 21:00)"
-        class="w-full"
-        @update:model-value="(value) => setValue('businessHours', value ? String(value) : undefined)"
-      />
-    </UFormField>
-
-    <UFormField
-      label="주차"
-      description="네이버 API에서 제공하지 않는 정보입니다. 필요하면 직접 입력해주세요."
-      :ui="{ wrapper: 'flex flex-col gap-1', description: 'text-xs text-gray-500' }"
-    >
-      <UInput
-        :model-value="info.parking"
-        placeholder="예: 주차가능"
-        class="w-full"
-        @update:model-value="(value) => setValue('parking', value ? String(value) : undefined)"
-      />
-    </UFormField>
-
-    <UFormField label="지도 URL">
-      <UInput
-        :model-value="info.placeUrl"
-        placeholder="네이버지도/구글지도 링크"
-        class="w-full"
-        @update:model-value="(value) => setValue('placeUrl', value ? String(value) : undefined)"
-      />
-    </UFormField>
-
-    <UFormField
-      label="인스타그램 계정"
-      description="네이버 API에서 제공하지 않는 정보입니다. 필요하면 직접 입력해주세요."
-      :ui="{ wrapper: 'flex flex-col gap-1', description: 'text-xs text-gray-500' }"
-    >
-      <UInput
-        :model-value="info.instagramHandle"
-        placeholder="예: @cafe.onsuljae"
-        class="w-full"
-        @update:model-value="(value) => setValue('instagramHandle', value ? String(value) : undefined)"
-      />
-    </UFormField>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <UFormField
+        v-for="field in detailFields"
+        :key="field.key"
+        :label="field.label"
+        :ui="{ wrapper: 'flex flex-col gap-1', description: 'text-xs text-gray-500' }"
+      >
+        <UInput
+          :model-value="info[field.key]"
+          :placeholder="field.placeholder"
+          class="w-full"
+          @update:model-value="(value) => setValue(field.key, value ? String(value) : undefined)"
+        />
+      </UFormField>
+    </div>
 
     <NaverCandidateModal
+      v-if="isSearchable"
       v-model:open="isModalOpen"
       :candidates="candidates"
-      description="일치하는 매장을 선택하면 매장명/카테고리/업체 설명/주소/전화번호/지도링크가 자동으로 채워집니다."
+      :description="`일치하는 항목을 선택하면 ${nameLabel}/주소가 자동으로 채워집니다.`"
       @select="applyCandidate"
     />
   </div>

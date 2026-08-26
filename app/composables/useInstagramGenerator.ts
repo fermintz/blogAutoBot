@@ -1,13 +1,11 @@
-import type { InstagramCaptionRequest, InstagramCaptionResult, InstagramEmojiOption, InstagramHashtagOption, InstagramLength, InstagramSettings, InstagramStyle, InstagramVisitInfo, StoreInfo } from '~~/shared/types'
+import type { InstagramCaptionRequest, InstagramCaptionResult, InstagramEmojiOption, InstagramHashtagOption, InstagramLength, InstagramSettings, InstagramStyle, InstagramTopic, InstagramVisitInfo, StoreInfo } from '~~/shared/types'
 
 export function useInstagramGenerator() {
+  const topic = ref<InstagramTopic>('restaurant')
   const storeInfo = ref<StoreInfo>({ name: '' })
 
   const region = ref('')
-  const visitedMenusInput = ref('')
   const reviewNotes = ref('')
-  const highlights = ref('')
-  const extraNotes = ref('')
 
   const style = ref<InstagramStyle>('natural')
   const length = ref<InstagramLength>('medium')
@@ -23,13 +21,7 @@ export function useInstagramGenerator() {
 
   const visitInfo = computed<InstagramVisitInfo>(() => ({
     region: region.value.trim() || undefined,
-    visitedMenus: visitedMenusInput.value
-      .split(',')
-      .map(m => m.trim())
-      .filter(Boolean),
-    reviewNotes: reviewNotes.value.trim() || undefined,
-    highlights: highlights.value.trim() || undefined,
-    extraNotes: extraNotes.value.trim() || undefined
+    reviewNotes: reviewNotes.value.trim() || undefined
   }))
 
   const { add: addHistoryItem } = useInstagramHistory()
@@ -55,6 +47,7 @@ export function useInstagramGenerator() {
     if (!isRegenerate) result.value = null
 
     const payload: InstagramCaptionRequest = {
+      topic: topic.value,
       storeInfo: storeInfo.value,
       visitInfo: visitInfo.value,
       settings: settings.value,
@@ -69,7 +62,7 @@ export function useInstagramGenerator() {
       })
       if (token !== requestToken) return
       result.value = response
-      addHistoryItem(payload.storeInfo, payload.visitInfo, payload.settings, response)
+      addHistoryItem(payload.topic, payload.storeInfo, payload.visitInfo, payload.settings, response)
     } catch (e) {
       if (token !== requestToken) return
       errorMessage.value = extractErrorMessage(e, '설명글을 생성하지 못했습니다.\n잠시 후 다시 시도해주세요.')
@@ -95,10 +88,7 @@ export function useInstagramGenerator() {
   function resetForm() {
     storeInfo.value = { name: '' }
     region.value = ''
-    visitedMenusInput.value = ''
     reviewNotes.value = ''
-    highlights.value = ''
-    extraNotes.value = ''
     style.value = 'natural'
     length.value = 'medium'
     emoji.value = 'natural'
@@ -107,12 +97,10 @@ export function useInstagramGenerator() {
   }
 
   return {
+    topic,
     storeInfo,
     region,
-    visitedMenusInput,
     reviewNotes,
-    highlights,
-    extraNotes,
     style,
     length,
     emoji,

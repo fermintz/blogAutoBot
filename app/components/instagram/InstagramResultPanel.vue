@@ -1,13 +1,17 @@
 <script setup lang="ts">
-import type { InstagramCaptionResult, StoreInfo } from '~~/shared/types'
+import type { InstagramCaptionResult, InstagramTopic, StoreInfo } from '~~/shared/types'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   result: InstagramCaptionResult
   storeInfo: StoreInfo
+  /** topic이 없는 과거 저장 이력을 표시할 때를 대비한 기본값. */
+  topic?: InstagramTopic
   /** 히스토리 모달 등 읽기 전용으로 보여줄 때 다시생성/초기화/수정 UI를 숨긴다. */
   hideActions?: boolean
   canRegenerate?: boolean
-}>()
+}>(), {
+  topic: 'restaurant'
+})
 
 const emit = defineEmits<{
   regenerate: []
@@ -24,8 +28,8 @@ watch(() => props.result, (result) => {
   isEditing.value = false
 })
 
-const storeInfoBlock = computed(() => buildStoreInfoDisplayBlock(props.storeInfo))
-const fullText = computed(() => buildFullInstagramCaptionText(editableBody.value, props.storeInfo, props.result.hashtags))
+const storeInfoBlock = computed(() => buildStoreInfoDisplayBlock(props.storeInfo, props.topic))
+const fullText = computed(() => buildFullInstagramCaptionText(editableBody.value, props.storeInfo, props.topic, props.result.hashtags))
 
 async function copy(text: string, label: string) {
   const success = await copyToClipboard(text)

@@ -109,10 +109,26 @@ async function callGeminiJson<T>(apiKey: string, systemPrompt: string, userPromp
   }
 
   try {
-    return JSON.parse(text) as T
+    return normalizeLiteralNewlines(JSON.parse(text)) as T
   } catch {
     throw createError({ statusCode: 502, statusMessage: 'AI 응답 형식을 해석하지 못했습니다. 다시 시도해주세요.' })
   }
+}
+
+/** Gemini가 JSON 응답의 문자열 필드 안에 실제 줄바꿈 대신 "\n" 두 글자(백슬래시+n)를 그대로 텍스트로 넣는 경우가 있다(정상적인 JSON 이스케이프는 이미 JSON.parse 단계에서 실제 줄바꿈으로 풀리므로, 이 시점에 남아있는 "\n" 텍스트는 항상 잘못된 값이다). 복사했을 때 화면에 "\n"이 그대로 보이는 문제를 막기 위해 파싱 직후 모든 문자열 필드에서 이를 실제 줄바꿈으로 치환한다. */
+function normalizeLiteralNewlines<T>(value: T): T {
+  if (typeof value === 'string') {
+    return value.replace(/\\r\\n|\\n|\\r/g, '\n') as unknown as T
+  }
+  if (Array.isArray(value)) {
+    return value.map(normalizeLiteralNewlines) as unknown as T
+  }
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, v]) => [key, normalizeLiteralNewlines(v)])
+    ) as T
+  }
+  return value
 }
 
 export async function callGemini(apiKey: string, systemPrompt: string, userPrompt: string): Promise<{ title: string, body: string, tags: string[] }> {

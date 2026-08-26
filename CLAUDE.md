@@ -64,6 +64,7 @@ Supabase CLI 표준 마이그레이션 폴더. SQL 에디터나 `supabase db pus
 ## 컨벤션
 
 - 입력 폼은 섹션 하나당 컴포넌트 하나 패턴을 따른다: `TopicSection`, `TitleSection`, `KeywordSection`, `ReferenceSection`, `StyleSection`, `BodyTemplateSection`, `WritingRulesSection`, `BusinessInfoSection`. 각 컴포넌트는 `defineModel`로 부모와 값을 바인딩한다. `BusinessInfoSection`은 `:topic` prop을 추가로 받아 `TOPIC_BUSINESS_FIELDS[topic]`에 맞춰 필드를 동적으로 그린다.
+- `app/components/`는 기능별 하위 폴더로 정리되어 있다: `blog/`(네이버 블로그 생성기 — `index.vue` 전용), `settings/`(설정 페이지 전용), `reels/`, `youtube/`, `instagram/`. 여러 기능에서 같이 쓰는 `SeoScoreCard`(블로그+SEO 체크)와 `NaverCandidateModal`(블로그 `BusinessInfoSection`+인스타 `InstagramStoreInfoSection`)만 루트에 남아있다. `nuxt.config.ts`에 `components: [{ path: '~/components', pathPrefix: false }]`를 설정해뒀기 때문에 컴포넌트 태그명은 폴더 위치와 무관하게 파일명 그대로 등록된다(`blog/TopicSection.vue` → `<TopicSection>`, 폴더명이 접두어로 붙지 않음) — 새 컴포넌트를 추가하거나 옮길 때 템플릿의 태그명을 바꿀 필요가 없다는 뜻이다. 다만 파일명은 프로젝트 전체에서 유일해야 한다(같은 이름이 두 폴더에 있으면 Nuxt가 경고를 내고 하나를 덮어쓴다).
 - Nuxt UI v4 시맨틱 컬러/보더 유틸리티(`text-muted`, `border-default`, `text-success`/`warning`/`error` 등)를 직접 지정한 색상 대신 사용한다. 아이콘은 Lucide(`i-lucide-*`).
 - `shared/` 디렉토리는 `~~/shared/...` 별칭으로 import한다(서버 코드에서는 상대 경로 `../../shared/types` 사용).
 - 사용자에게 보이는 모든 문구(라벨, 설명, 에러 메시지, 플레이스홀더)는 한국어로 작성한다.

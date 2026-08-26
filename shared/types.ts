@@ -260,28 +260,102 @@ export interface UserSettings {
   hasApiKey: boolean
 }
 
-/** 인스타 설명글 생성에서 다루는 매장 정보. name 외에는 모두 선택값이며, 네이버 지역 검색으로 채워지거나(category/address/phone/description) 사용자가 직접 입력한다(나머지 필드는 API가 제공하지 않아 항상 수동 입력). 검색으로 채워진 뒤에도 사용자가 값을 고치면 그 수정값이 그대로 최종 데이터가 된다(별도의 "원본 API 값"을 따로 보관하지 않는다). */
+/** 인스타 설명글 생성이 지원하는 카테고리. 블로그의 Topic과는 별개 타입이다(맛집/여행/숙소/상품처럼 이름이 겹치는 값이 있어도 서로 독립적으로 관리한다). 여행지/관광지는 "여행지" 하나로, 체험/쇼핑은 "기타" 하나로 묶여 있다. 새 카테고리를 추가할 때는 여기(옵션/타입)와 server/utils/prompts/instagram/categoryConfig.ts의 INSTAGRAM_CATEGORY_CONFIG, 아래 INSTAGRAM_STORE_FIELDS/INSTAGRAM_STORE_NAME_LABEL/INSTAGRAM_SEARCHABLE_TOPICS, InstagramStoreInfoSection.vue·InstagramVisitInfoSection.vue의 라벨 맵만 추가하면 된다 — 카테고리별 경험 생성 규칙은 데이터 테이블 하나로 모여 있고 공통 엔진이 이를 조립하는 구조라, 카테고리를 늘려도 생성 로직 자체는 손댈 필요가 없다. */
+export const INSTAGRAM_TOPIC_OPTIONS = [
+  { value: 'restaurant', label: '맛집', icon: 'i-lucide-utensils' },
+  { value: 'cafe', label: '카페', icon: 'i-lucide-coffee' },
+  { value: 'travel', label: '여행지', icon: 'i-lucide-map' },
+  { value: 'stay', label: '숙소', icon: 'i-lucide-bed' },
+  { value: 'exhibition', label: '전시', icon: 'i-lucide-image' },
+  { value: 'product', label: '상품', icon: 'i-lucide-package' },
+  { value: 'etc', label: '기타', icon: 'i-lucide-ellipsis' }
+] as const
+
+export type InstagramTopic = typeof INSTAGRAM_TOPIC_OPTIONS[number]['value']
+
+/** 인스타 설명글 생성에서 다루는 매장/장소 정보. name 외에는 모두 선택값이며, address는 네이버 지역 검색으로 채워지거나 사용자가 직접 입력한다(영업시간·주차·가격대는 API가 제공하지 않아 항상 수동 입력). 검색으로 채워진 뒤에도 사용자가 값을 고치면 그 수정값이 그대로 최종 데이터가 된다(별도의 "원본 API 값"을 따로 보관하지 않는다). */
 export interface StoreInfo {
   name: string
   address?: string
-  englishAddress?: string
-  phone?: string
-  category?: string
-  /** 네이버 지역 검색이 제공하는 짧은 업체 설명. 검색으로 채워지거나 직접 입력한다. */
-  description?: string
   businessHours?: string
   parking?: string
-  placeUrl?: string
-  /** 인스타그램 계정(예: @cafe.onsuljae). 결과 매장정보 블록의 "인스타그램" 항목에 그대로 쓰인다. */
-  instagramHandle?: string
+  /** 입장료·이용 비용·가격대 등. 카테고리에 따라 쓰거나 쓰지 않는다(INSTAGRAM_STORE_FIELDS 참고). */
+  price?: string
+  /** 상품(product) 카테고리 전용: 브랜드/제조사. */
+  brand?: string
+  /** 상품(product) 카테고리 전용: 구매 링크. */
+  purchaseUrl?: string
 }
+
+export interface InstagramStoreFieldDef {
+  key: keyof Omit<StoreInfo, 'name'>
+  label: string
+  placeholder: string
+}
+
+/** 주제별로 매장/장소 정보 입력폼에 어떤 필드를 보여줄지, 라벨·placeholder를 무엇으로 할지 정의한다. UI(InstagramStoreInfoSection.vue)와 서버 프롬프트(contentBlocks.ts)가 이 테이블을 공유해 라벨이 어긋나지 않게 한다. name은 모든 주제에 공통(검색 버튼 포함)이라 이 테이블에 넣지 않는다. */
+export const INSTAGRAM_STORE_FIELDS: Record<InstagramTopic, InstagramStoreFieldDef[]> = {
+  restaurant: [
+    { key: 'address', label: '한국어 주소', placeholder: '예: 부산 기장군 기장읍 내리길 146-5' },
+    { key: 'businessHours', label: '영업시간', placeholder: '예: 11:00 - 20:00 (토,일 - 21:00)' },
+    { key: 'parking', label: '주차 안내', placeholder: '예: 주차가능' }
+  ],
+  cafe: [
+    { key: 'address', label: '한국어 주소', placeholder: '예: 부산 수영구 광안해변로 ...' },
+    { key: 'businessHours', label: '영업시간', placeholder: '예: 10:00 - 22:00' },
+    { key: 'parking', label: '주차 안내', placeholder: '예: 주차가능' }
+  ],
+  travel: [
+    { key: 'address', label: '위치/주소', placeholder: '예: 부산 해운대구 ...' },
+    { key: 'businessHours', label: '운영시간/추천 방문시기', placeholder: '예: 연중무휴, 일몰 시간대 추천' },
+    { key: 'price', label: '입장료/이용 비용', placeholder: '예: 무료 / 성인 5,000원' },
+    { key: 'parking', label: '주차 안내', placeholder: '예: 인근 공영주차장 이용' }
+  ],
+  stay: [
+    { key: 'address', label: '위치/주소', placeholder: '예: 강원도 평창군 ...' },
+    { key: 'businessHours', label: '체크인/체크아웃', placeholder: '예: 체크인 15:00 / 체크아웃 11:00' },
+    { key: 'price', label: '가격대', placeholder: '예: 비수기 10만원~ / 성수기 20만원~' },
+    { key: 'parking', label: '주차 안내', placeholder: '예: 건물 내 주차 가능' }
+  ],
+  exhibition: [
+    { key: 'address', label: '위치/주소', placeholder: '예: 서울 종로구 ...' },
+    { key: 'businessHours', label: '관람시간', placeholder: '예: 10:00 - 19:00 (월요일 휴관)' },
+    { key: 'price', label: '입장료', placeholder: '예: 성인 15,000원' },
+    { key: 'parking', label: '주차 안내', placeholder: '예: 건물 내 주차 가능' }
+  ],
+  /** 상품은 방문할 "장소"가 아니라서 주소/영업시간/주차 대신 브랜드·구매 링크를 쓴다. */
+  product: [
+    { key: 'brand', label: '브랜드/제조사', placeholder: '예: OO전자' },
+    { key: 'price', label: '가격', placeholder: '예: 59,000원' },
+    { key: 'purchaseUrl', label: '구매 링크', placeholder: '스마트스토어/쇼핑몰 URL' }
+  ],
+  etc: [
+    { key: 'address', label: '위치/주소', placeholder: '예: 서울 마포구 ...' },
+    { key: 'businessHours', label: '영업시간/이용시간', placeholder: '예: 10:00 - 20:00' },
+    { key: 'parking', label: '주차 안내', placeholder: '예: 주차가능' }
+  ]
+}
+
+/** 카테고리별 "이름" 필드 라벨. name은 모든 카테고리에 공통 필드라 INSTAGRAM_STORE_FIELDS에는 없지만 라벨은 카테고리마다 다르다. */
+export const INSTAGRAM_STORE_NAME_LABEL: Record<InstagramTopic, string> = {
+  restaurant: '매장명',
+  cafe: '카페명',
+  travel: '여행지명',
+  stay: '숙소명',
+  exhibition: '전시명',
+  product: '상품명',
+  etc: '장소/업체명'
+}
+
+/** 네이버 지역 검색은 실존 장소를 찾는 API라 장소가 아닌 상품 단위인 product 카테고리에는 맞지 않는다. InstagramStoreInfoSection.vue가 이 값을 보고 검색 버튼을 숨긴다(블로그 BusinessInfoSection.vue의 SEARCHABLE_TOPICS와 같은 이유). */
+export const INSTAGRAM_SEARCHABLE_TOPICS: InstagramTopic[] = ['restaurant', 'cafe', 'travel', 'stay', 'exhibition', 'etc']
 
 export const INSTAGRAM_STYLE_OPTIONS = [
   { value: 'natural', label: '자연스러운 방문 후기' },
   { value: 'emotional', label: '감성 후기' },
   { value: 'informative', label: '정보형 후기' },
   { value: 'plain', label: '담백한 후기' },
-  { value: 'review', label: '맛집/카페 리뷰 스타일' }
+  { value: 'review', label: '상세 리뷰 스타일' }
 ] as const
 
 export type InstagramStyle = typeof INSTAGRAM_STYLE_OPTIONS[number]['value']
@@ -316,21 +390,16 @@ export interface InstagramSettings {
   hashtag: InstagramHashtagOption
 }
 
-/** 사용자가 직접 입력하는 방문 경험 데이터. STORE_INFO(매장 사실 정보)와 별개로, "실제로 방문해서 무엇을 먹고 느꼈는지"를 담는 콘텐츠의 핵심 재료다. reviewNotes 외에는 모두 선택값이다. */
+/** 사용자가 직접 입력하는 방문 경험 데이터. STORE_INFO(장소 사실 정보)와 별개로, "실제로 방문해서 무엇을 하고 느꼈는지"를 담는 콘텐츠의 핵심 재료다. reviewNotes 외에는 선택값이다. */
 export interface InstagramVisitInfo {
-  /** 지역/동네(예: "광안리 / 민락동"). 검색 키워드(Primary Keyword) 구성과 본문 도입부에 쓰인다. */
+  /** 지역/동네(예: "광안리 / 민락동"). 검색 키워드 구성과 본문 도입부에 쓰인다. */
   region?: string
-  /** 실제로 방문해서 먹거나 이용한 메뉴 목록. 본문의 메뉴별 후기 섹션과 해시태그(Menu Keyword)의 근거가 된다. */
-  visitedMenus?: string[]
-  /** 사용자가 직접 느낀 방문 후기(맛, 분위기, 서비스 등). 실제 경험처럼 쓰는 본문의 가장 중요한 사실 출처다. */
+  /** 실제로 겪은 경험(먹은 메뉴, 둘러본 스팟, 이용한 시설 등 카테고리별로 의미가 다르다)과 그에 대한 느낀 점을 함께 적은 자유 텍스트. 본문 확장과 해시태그의 근거이자, 실제 경험처럼 쓰는 본문의 가장 중요한 사실 출처다. */
   reviewNotes?: string
-  /** 특별히 강조하고 싶은 내용(예: "한국적인 인테리어"). */
-  highlights?: string
-  /** 위 항목에 담기지 않는 자유 메모. */
-  extraNotes?: string
 }
 
 export interface InstagramCaptionRequest {
+  topic: InstagramTopic
   storeInfo: StoreInfo
   visitInfo: InstagramVisitInfo
   settings: InstagramSettings
@@ -346,10 +415,11 @@ export interface InstagramCaptionResult {
   hashtags: string[]
 }
 
-/** 브라우저 localStorage에 저장되는 인스타 설명글 생성 이력 1건. */
+/** 브라우저 localStorage에 저장되는 인스타 설명글 생성 이력 1건. topic이 없는 과거 저장 항목은 화면에서 'restaurant'로 취급한다. */
 export interface SavedInstagramCaption {
   id: string
   createdAt: string
+  topic: InstagramTopic
   storeInfo: StoreInfo
   visitInfo: InstagramVisitInfo
   settings: InstagramSettings

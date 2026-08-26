@@ -1,6 +1,20 @@
 <script setup lang="ts">
 const { user, signOut } = useAuth()
 
+const route = useRoute()
+
+const navLinks = [
+  { label: '블로그', to: '/', icon: 'i-lucide-file-text' },
+  { label: 'SEO체크', to: '/seo-check', icon: 'i-lucide-search-check' },
+  { label: '릴스자막', to: '/reels', icon: 'i-lucide-clapperboard' },
+  { label: '인스타', to: '/instagram', icon: 'i-lucide-instagram' },
+  { label: '유튜브', to: '/youtube', icon: 'i-lucide-youtube' }
+]
+
+const navMenuItems = computed(() =>
+  navLinks.map(link => ({ ...link, active: route.path === link.to }))
+)
+
 useHead({
   meta: [
     { name: 'viewport', content: 'width=device-width, initial-scale=1' }
@@ -26,7 +40,7 @@ useSeoMeta({
 
 <template>
   <UApp>
-    <header class="flex items-center justify-between px-8 h-18">
+    <header class="flex items-center justify-between px-4 sm:px-8 h-18">
       <div class="flex items-center gap-12">
         <div>
           <NuxtLink
@@ -36,36 +50,14 @@ useSeoMeta({
             <span>Writer Studio</span>
           </NuxtLink>
         </div>
-        <div class="flex items-center gap-5">
+        <div class="hidden md:flex items-center gap-5">
           <NuxtLink
-            to="/"
+            v-for="link in navLinks"
+            :key="link.to"
+            :to="link.to"
             active-class="text-primary font-medium"
           >
-            글생성
-          </NuxtLink>
-          <NuxtLink
-            to="/seo-check"
-            active-class="text-primary"
-          >
-            SEO체크
-          </NuxtLink>
-          <NuxtLink
-            to="/reels"
-            active-class="text-primary"
-          >
-            릴스자막
-          </NuxtLink>
-          <NuxtLink
-            to="/instagram"
-            active-class="text-primary"
-          >
-            인스타
-          </NuxtLink>
-          <NuxtLink
-            to="/youtube"
-            active-class="text-primary"
-          >
-            유튜브
+            {{ link.label }}
           </NuxtLink>
         </div>
       </div>
@@ -86,6 +78,35 @@ useSeoMeta({
           @click="signOut"
         />
         <UColorModeButton />
+        <USlideover
+          title="메뉴"
+          class="md:hidden"
+        >
+          <UButton
+            icon="i-lucide-menu"
+            aria-label="메뉴"
+            color="neutral"
+            variant="ghost"
+          />
+
+          <template #body="{ close }">
+            <div class="flex flex-col gap-1">
+              <UButton
+                v-for="link in navMenuItems"
+                :key="link.to"
+                :to="link.to"
+                :icon="link.icon"
+                :color="link.active ? 'primary' : 'neutral'"
+                :variant="link.active ? 'soft' : 'ghost'"
+                block
+                class="justify-start"
+                @click="close"
+              >
+                {{ link.label }}
+              </UButton>
+            </div>
+          </template>
+        </USlideover>
       </div>
     </header>
 

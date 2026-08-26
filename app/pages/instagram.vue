@@ -1,11 +1,9 @@
 <script setup lang="ts">
 const {
+  topic,
   storeInfo,
   region,
-  visitedMenusInput,
   reviewNotes,
-  highlights,
-  extraNotes,
   style,
   length,
   emoji,
@@ -46,14 +44,17 @@ const {
           </template>
 
           <div class="space-y-6">
-            <InstagramStoreInfoSection v-model="storeInfo" />
+            <InstagramTopicSection v-model="topic" />
+            <USeparator />
+            <InstagramStoreInfoSection
+              v-model="storeInfo"
+              :topic="topic"
+            />
             <USeparator />
             <InstagramVisitInfoSection
               v-model:region="region"
-              v-model:visited-menus-input="visitedMenusInput"
               v-model:review-notes="reviewNotes"
-              v-model:highlights="highlights"
-              v-model:extra-notes="extraNotes"
+              :topic="topic"
             />
             <USeparator />
             <InstagramSettingsSection
@@ -95,6 +96,7 @@ const {
           v-else-if="result"
           :result="result"
           :store-info="storeInfo"
+          :topic="topic"
           :can-regenerate="canRegenerate"
           @regenerate="regenerate"
           @reset="resetResult"
@@ -113,7 +115,7 @@ const {
               아직 생성된 설명글이 없습니다
             </p>
             <p class="text-sm mt-1">
-              왼쪽에서 매장명과 방문 후기를 입력한 뒤 "설명글 생성하기"를 눌러주세요.
+              왼쪽에서 주제를 고르고 이름과 방문 후기를 입력한 뒤 "설명글 생성하기"를 눌러주세요.
             </p>
           </div>
         </UCard>

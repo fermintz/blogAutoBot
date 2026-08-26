@@ -28,6 +28,7 @@ export default defineEventHandler(async (event): Promise<InstagramCaptionResult>
 
   const regenerate = body.regenerate === true
   const req: InstagramCaptionRequest = {
+    topic: body.topic ?? 'restaurant',
     storeInfo: { ...body.storeInfo, name: storeName },
     visitInfo: body.visitInfo ?? {},
     settings: body.settings,
