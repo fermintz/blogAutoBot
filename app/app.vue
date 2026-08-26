@@ -13,7 +13,7 @@ useHead({
   }
 })
 
-const title = 'BLog Gem'
+const title = 'Writer Studio'
 const description = '키워드와 업체 정보를 입력하면 SEO에 최적화된 네이버 블로그 글 초안을 자동으로 생성해드립니다.'
 
 useSeoMeta({
@@ -31,9 +31,9 @@ useSeoMeta({
         <div>
           <NuxtLink
             to="/"
-            class="flex text-2xl items-center gap-2 font-semibold focus-visible:outline-3 outline-primary/25 rounded-md p-1 -ms-1"
+            class="flex text-2xl items-center gap-2 font-bold focus-visible:outline-3 outline-primary/25 rounded-md p-1 -ms-1"
           >
-            <span>Blog Gem</span>
+            <span>Writer Studio</span>
           </NuxtLink>
         </div>
         <div class="flex items-center gap-5">
@@ -54,6 +54,18 @@ useSeoMeta({
             active-class="text-primary"
           >
             릴스자막
+          </NuxtLink>
+          <NuxtLink
+            to="/instagram"
+            active-class="text-primary"
+          >
+            인스타
+          </NuxtLink>
+          <NuxtLink
+            to="/youtube"
+            active-class="text-primary"
+          >
+            유튜브
           </NuxtLink>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import type { ReelsCaption, ReelsScriptResult, ReelsScriptSegment } from '../../shared/types'
+import type { InstagramCaptionResult, ReelsCaption, ReelsScriptResult, ReelsScriptSegment, YoutubeGenerationResult } from '../../shared/types'
 
 const GEMINI_MODEL = 'gemini-3.6-flash'
 const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`
@@ -45,6 +45,25 @@ const REELS_RESPONSE_SCHEMA = {
     hashtags: { type: 'ARRAY', items: { type: 'STRING' } }
   },
   required: ['title', 'coverText', 'hook', 'body', 'cta', 'hashtags']
+}
+
+const INSTAGRAM_RESPONSE_SCHEMA = {
+  type: 'OBJECT',
+  properties: {
+    body: { type: 'STRING' },
+    hashtags: { type: 'ARRAY', items: { type: 'STRING' } }
+  },
+  required: ['body']
+}
+
+const YOUTUBE_RESPONSE_SCHEMA = {
+  type: 'OBJECT',
+  properties: {
+    titles: { type: 'ARRAY', items: { type: 'STRING' } },
+    descriptionIntro: { type: 'STRING' },
+    tags: { type: 'ARRAY', items: { type: 'STRING' } }
+  },
+  required: ['titles', 'descriptionIntro']
 }
 
 interface GeminiSuccessBody {
@@ -106,6 +125,33 @@ export async function callGemini(apiKey: string, systemPrompt: string, userPromp
   return {
     title: parsed.title,
     body: parsed.body,
+    tags: Array.isArray(parsed.tags) ? parsed.tags : []
+  }
+}
+
+export async function callGeminiInstagramCaption(apiKey: string, systemPrompt: string, userPrompt: string, options?: { temperature?: number }): Promise<InstagramCaptionResult> {
+  const parsed = await callGeminiJson<{ body?: string, hashtags?: string[] }>(apiKey, systemPrompt, userPrompt, INSTAGRAM_RESPONSE_SCHEMA, options?.temperature ?? 1)
+
+  if (!parsed.body) {
+    throw createError({ statusCode: 502, statusMessage: 'AI가 완전한 설명글을 생성하지 못했습니다. 다시 시도해주세요.' })
+  }
+
+  return {
+    body: parsed.body,
+    hashtags: Array.isArray(parsed.hashtags) ? parsed.hashtags : []
+  }
+}
+
+export async function callGeminiYoutubeGeneration(apiKey: string, systemPrompt: string, userPrompt: string, options?: { temperature?: number }): Promise<YoutubeGenerationResult> {
+  const parsed = await callGeminiJson<{ titles?: string[], descriptionIntro?: string, tags?: string[] }>(apiKey, systemPrompt, userPrompt, YOUTUBE_RESPONSE_SCHEMA, options?.temperature ?? 1)
+
+  if (!Array.isArray(parsed.titles) || parsed.titles.length === 0 || !parsed.descriptionIntro) {
+    throw createError({ statusCode: 502, statusMessage: 'AI가 완전한 제목/설명을 생성하지 못했습니다. 다시 시도해주세요.' })
+  }
+
+  return {
+    titles: parsed.titles,
+    descriptionIntro: parsed.descriptionIntro,
     tags: Array.isArray(parsed.tags) ? parsed.tags : []
   }
 }

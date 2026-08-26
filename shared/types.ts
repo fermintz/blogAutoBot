@@ -259,3 +259,170 @@ export interface UserSettings {
   length: LengthOption
   hasApiKey: boolean
 }
+
+/** 인스타 설명글 생성에서 다루는 매장 정보. name 외에는 모두 선택값이며, 네이버 지역 검색으로 채워지거나(category/address/phone/description) 사용자가 직접 입력한다(나머지 필드는 API가 제공하지 않아 항상 수동 입력). 검색으로 채워진 뒤에도 사용자가 값을 고치면 그 수정값이 그대로 최종 데이터가 된다(별도의 "원본 API 값"을 따로 보관하지 않는다). */
+export interface StoreInfo {
+  name: string
+  address?: string
+  englishAddress?: string
+  phone?: string
+  category?: string
+  /** 네이버 지역 검색이 제공하는 짧은 업체 설명. 검색으로 채워지거나 직접 입력한다. */
+  description?: string
+  businessHours?: string
+  parking?: string
+  placeUrl?: string
+  /** 인스타그램 계정(예: @cafe.onsuljae). 결과 매장정보 블록의 "인스타그램" 항목에 그대로 쓰인다. */
+  instagramHandle?: string
+}
+
+export const INSTAGRAM_STYLE_OPTIONS = [
+  { value: 'natural', label: '자연스러운 방문 후기' },
+  { value: 'emotional', label: '감성 후기' },
+  { value: 'informative', label: '정보형 후기' },
+  { value: 'plain', label: '담백한 후기' },
+  { value: 'review', label: '맛집/카페 리뷰 스타일' }
+] as const
+
+export type InstagramStyle = typeof INSTAGRAM_STYLE_OPTIONS[number]['value']
+
+export const INSTAGRAM_LENGTH_OPTIONS = [
+  { value: 'short', label: '짧게', paragraphRange: '2~3개 문단' },
+  { value: 'medium', label: '보통', paragraphRange: '4~6개 문단' },
+  { value: 'long', label: '길게', paragraphRange: '6~8개 문단' }
+] as const
+
+export type InstagramLength = typeof INSTAGRAM_LENGTH_OPTIONS[number]['value']
+
+export const INSTAGRAM_EMOJI_OPTIONS = [
+  { value: 'natural', label: '자연스럽게 사용' },
+  { value: 'minimal', label: '최소 사용' },
+  { value: 'none', label: '사용 안 함' }
+] as const
+
+export type InstagramEmojiOption = typeof INSTAGRAM_EMOJI_OPTIONS[number]['value']
+
+export const INSTAGRAM_HASHTAG_OPTIONS = [
+  { value: 'auto', label: '자동 생성' },
+  { value: 'none', label: '생성하지 않음' }
+] as const
+
+export type InstagramHashtagOption = typeof INSTAGRAM_HASHTAG_OPTIONS[number]['value']
+
+export interface InstagramSettings {
+  style: InstagramStyle
+  length: InstagramLength
+  emoji: InstagramEmojiOption
+  hashtag: InstagramHashtagOption
+}
+
+/** 사용자가 직접 입력하는 방문 경험 데이터. STORE_INFO(매장 사실 정보)와 별개로, "실제로 방문해서 무엇을 먹고 느꼈는지"를 담는 콘텐츠의 핵심 재료다. reviewNotes 외에는 모두 선택값이다. */
+export interface InstagramVisitInfo {
+  /** 지역/동네(예: "광안리 / 민락동"). 검색 키워드(Primary Keyword) 구성과 본문 도입부에 쓰인다. */
+  region?: string
+  /** 실제로 방문해서 먹거나 이용한 메뉴 목록. 본문의 메뉴별 후기 섹션과 해시태그(Menu Keyword)의 근거가 된다. */
+  visitedMenus?: string[]
+  /** 사용자가 직접 느낀 방문 후기(맛, 분위기, 서비스 등). 실제 경험처럼 쓰는 본문의 가장 중요한 사실 출처다. */
+  reviewNotes?: string
+  /** 특별히 강조하고 싶은 내용(예: "한국적인 인테리어"). */
+  highlights?: string
+  /** 위 항목에 담기지 않는 자유 메모. */
+  extraNotes?: string
+}
+
+export interface InstagramCaptionRequest {
+  storeInfo: StoreInfo
+  visitInfo: InstagramVisitInfo
+  settings: InstagramSettings
+  /** "다시 생성" 요청 여부. true면 이전 본문과 다른 표현으로 재생성하도록 프롬프트에 반영한다. */
+  regenerate?: boolean
+  /** regenerate가 true일 때만 채워지는 직전 생성 본문(재생성 시 참고용). */
+  previousBody?: string
+}
+
+/** AI는 본문(body)과 해시태그만 생성한다. 매장 정보 블록은 STORE_INFO로부터 클라이언트가 직접 조립해 사실 왜곡 가능성을 원천 차단한다. */
+export interface InstagramCaptionResult {
+  body: string
+  hashtags: string[]
+}
+
+/** 브라우저 localStorage에 저장되는 인스타 설명글 생성 이력 1건. */
+export interface SavedInstagramCaption {
+  id: string
+  createdAt: string
+  storeInfo: StoreInfo
+  visitInfo: InstagramVisitInfo
+  settings: InstagramSettings
+  result: InstagramCaptionResult
+}
+
+/** 유튜브 설명문의 타임라인 한 줄. 사용자가 입력한 그대로 설명문에 조립되며 AI가 수정하지 않는다. */
+export interface YoutubeTimelineItem {
+  id: string
+  time: string
+  title: string
+}
+
+export const YOUTUBE_TITLE_STYLE_OPTIONS = [
+  { value: 'search', label: '검색형' },
+  { value: 'searchClick', label: '검색 + 클릭형' },
+  { value: 'emotional', label: '감성형' },
+  { value: 'travelVlog', label: '여행 브이로그형' }
+] as const
+
+export type YoutubeTitleStyle = typeof YOUTUBE_TITLE_STYLE_OPTIONS[number]['value']
+
+export const YOUTUBE_TITLE_COUNT_OPTIONS = [3, 5, 10] as const
+
+export type YoutubeTitleCount = typeof YOUTUBE_TITLE_COUNT_OPTIONS[number]
+
+export const YOUTUBE_VIDEO_TYPE_OPTIONS = [
+  { value: 'travelVlog', label: '여행 브이로그' },
+  { value: 'restaurant', label: '맛집' },
+  { value: 'cafe', label: '카페' },
+  { value: 'dailyVlog', label: '일상 브이로그' },
+  { value: 'infoReview', label: '정보/리뷰' },
+  { value: 'etc', label: '기타' }
+] as const
+
+export type YoutubeVideoType = typeof YOUTUBE_VIDEO_TYPE_OPTIONS[number]['value']
+
+/** 현재는 한국어만 지원하지만, 향후 언어가 늘어나도 옵션 목록에 추가하기만 하면 되도록 구조를 분리해둔다. */
+export const YOUTUBE_LANGUAGE_OPTIONS = [
+  { value: 'ko', label: '한국어' }
+] as const
+
+export type YoutubeLanguage = typeof YOUTUBE_LANGUAGE_OPTIONS[number]['value']
+
+export interface YoutubeGenerationRequest {
+  /** 영상 주제와 실제 내용을 함께 적은 텍스트. AI가 제목·소개문을 만들 때 사실 근거로 삼는 유일한 데이터이며, 주제 요약은 AI가 이 안에서 스스로 파악한다. */
+  content: string
+  /** 검색 노출을 원하는 키워드 힌트. content와 관련 있을 때만 자연스럽게 반영되고, 무관하면 무시된다. */
+  keywords: string[]
+  videoType: YoutubeVideoType
+  titleStyle: YoutubeTitleStyle
+  titleCount: YoutubeTitleCount
+  language: YoutubeLanguage
+  /** "다시 생성" 요청 여부. true면 이전 제목들과 겹치지 않는 새로운 후보를 만들도록 프롬프트에 반영한다. */
+  regenerate?: boolean
+  /** regenerate가 true일 때만 채워지는 직전 생성 제목 목록(재생성 시 중복 방지 참고용). */
+  previousTitles?: string[]
+}
+
+/** AI는 제목 후보/영상 소개문/태그만 생성한다. 타임라인·저작권·협업문의는 사용자가 입력한 값 그대로 애플리케이션이 조립해 사실 왜곡 가능성을 원천 차단한다. */
+export interface YoutubeGenerationResult {
+  titles: string[]
+  descriptionIntro: string
+  tags: string[]
+}
+
+/** 브라우저 localStorage에 저장되는 유튜브 생성 이력 1건. */
+export interface SavedYoutubeGeneration {
+  id: string
+  createdAt: string
+  input: YoutubeGenerationRequest
+  timeline: YoutubeTimelineItem[]
+  copyright: string
+  contact: string
+  result: YoutubeGenerationResult
+}

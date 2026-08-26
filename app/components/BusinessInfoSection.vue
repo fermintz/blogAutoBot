@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { TOPIC_BUSINESS_FIELDS, type BusinessInfo, type BusinessLookupResponse, type NaverBusinessCandidate, type Topic } from '~~/shared/types'
+import { TOPIC_BUSINESS_FIELDS, type BusinessInfo, type NaverBusinessCandidate, type Topic } from '~~/shared/types'
 
 const props = defineProps<{
   topic: Topic
@@ -22,31 +22,7 @@ function setValue(key: string, value: string | undefined) {
 }
 
 const searchQuery = computed(() => (textValue('name') ?? '').trim())
-const lookupPending = ref(false)
-const lookupError = ref('')
-const candidates = ref<NaverBusinessCandidate[]>([])
-const isModalOpen = ref(false)
-
-async function lookup() {
-  if (!searchQuery.value || lookupPending.value) return
-
-  lookupPending.value = true
-  lookupError.value = ''
-  candidates.value = []
-
-  try {
-    const res = await $fetch<BusinessLookupResponse>('/api/business-lookup', {
-      method: 'POST',
-      body: { query: searchQuery.value }
-    })
-    candidates.value = res.candidates
-    isModalOpen.value = true
-  } catch (e) {
-    lookupError.value = extractErrorMessage(e, '업체 정보를 조회하지 못했습니다.')
-  } finally {
-    lookupPending.value = false
-  }
-}
+const { lookupPending, lookupError, candidates, isModalOpen, lookup } = useNaverLookup()
 
 function applyCandidate(candidate: NaverBusinessCandidate) {
   const fieldKeys = new Set(fields.value.map(f => f.key))
@@ -102,7 +78,7 @@ function applyCandidate(candidate: NaverBusinessCandidate) {
           :placeholder="field.placeholder"
           class="w-full"
           @update:model-value="(value) => setValue(field.key, value)"
-          @keyup.enter="field.key === 'name' && isSearchable && lookup()"
+          @keyup.enter="field.key === 'name' && isSearchable && lookup(searchQuery, '업체 정보를 조회하지 못했습니다.')"
         >
           <template
             v-if="field.key === 'name' && isSearchable"
@@ -118,54 +94,18 @@ function applyCandidate(candidate: NaverBusinessCandidate) {
               :disabled="!searchQuery || lookupPending"
               class="disabled:cursor-default"
               aria-label="네이버에서 업체 조회"
-              @click="lookup"
+              @click="lookup(searchQuery, '업체 정보를 조회하지 못했습니다.')"
             />
           </template>
         </UInput>
       </UFormField>
     </div>
 
-    <UModal
+    <NaverCandidateModal
       v-model:open="isModalOpen"
-      title="네이버 검색 결과"
+      :candidates="candidates"
       description="일치하는 업체를 선택하면 업체명/주소/전화번호/지도링크가 자동으로 채워집니다."
-    >
-      <template #body>
-        <div
-          v-if="candidates.length === 0"
-          class="text-muted text-sm py-6 text-center"
-        >
-          검색 결과가 없습니다. 업체명을 다시 확인해 주세요.
-        </div>
-        <div
-          v-else
-          class="flex flex-col gap-2"
-        >
-          <button
-            v-for="(candidate, idx) in candidates"
-            :key="idx"
-            type="button"
-            class="text-left border border-default rounded-lg p-3 hover:bg-elevated transition-colors"
-            @click="applyCandidate(candidate)"
-          >
-            <div class="font-medium text-sm">
-              {{ candidate.title }}
-            </div>
-            <div class="text-muted text-xs mt-1">
-              {{ candidate.category }}
-            </div>
-            <div class="text-muted text-xs mt-1">
-              {{ candidate.roadAddress || candidate.address }}
-            </div>
-            <div
-              v-if="candidate.telephone"
-              class="text-muted text-xs mt-1"
-            >
-              {{ candidate.telephone }}
-            </div>
-          </button>
-        </div>
-      </template>
-    </UModal>
+      @select="applyCandidate"
+    />
   </div>
 </template>
