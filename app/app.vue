@@ -117,7 +117,7 @@ useSeoMeta({
     <UFooter>
       <template #bottom>
         <p class="text-sm text-muted text-center">
-          Copyright {{ new Date().getFullYear() }} Fermintz All rights reserved. 
+          Copyright © {{ new Date().getFullYear() }} Writer Studio | All rights reserved. 
         </p>
       </template>
     </UFooter>
