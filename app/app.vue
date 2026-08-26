@@ -117,7 +117,7 @@ useSeoMeta({
     <UFooter>
       <template #bottom>
         <p class="text-sm text-muted text-center">
-          생성된 글은 검토 후 직접 복사하여 사용하세요. © {{ new Date().getFullYear() }}
+          Copyright {{ new Date().getFullYear() }} Fermintz All rights reserved. 
         </p>
       </template>
     </UFooter>
