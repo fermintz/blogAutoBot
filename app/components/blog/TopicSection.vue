@@ -16,11 +16,27 @@ const items = TOPIC_OPTIONS.map(t => ({ label: t.label, value: t.value, icon: t.
       <span class="text-sm font-medium">글 주제</span>
     </div>
 
-    <UTabs
-      v-model="topic"
-      :items="items"
-      :content="false"
-      size="sm"
-    />
+    <div class="hidden sm:block">
+      <UTabs
+        v-model="topic"
+        :items="items"
+        :content="false"
+        size="sm"
+      />
+    </div>
+
+    <div class="grid grid-cols-3 gap-2 sm:hidden">
+      <UButton
+        v-for="item in items"
+        :key="item.value"
+        :label="item.label"
+        :icon="item.icon"
+        :variant="topic === item.value ? 'solid' : 'outline'"
+        :color="topic === item.value ? 'primary' : 'neutral'"
+        size="sm"
+        block
+        @click="topic = item.value"
+      />
+    </div>
   </div>
 </template>
