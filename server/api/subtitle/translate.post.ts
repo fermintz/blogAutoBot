@@ -42,14 +42,16 @@ export default defineEventHandler(async (event): Promise<SubtitleTranslateRespon
   const prompt = buildSubtitlePrompt(req)
   const translations = await callGeminiSubtitleTranslate(apiKey, prompt.system, prompt.user)
 
+  /**
+   * 배치 안의 일부 행만 번역이 비어 오는 경우가 있다(AI가 특정 줄만 누락하는 경우). 그렇다고 배치 전체를 실패
+   * 처리하면 나머지 정상 번역분까지 버려지므로, 성공한 항목만 반환하고 누락된 행은 클라이언트가 실패로 표시해
+   * 개별적으로 재시도할 수 있게 한다.
+   */
   const translatedMap = new Map(translations.map(t => [t.rowIndex, t.translatedText]))
-  const missing = items.some(item => !translatedMap.get(item.rowIndex)?.trim())
-
-  if (missing) {
-    throw createError({ statusCode: 502, statusMessage: '일부 자막 번역에 실패했습니다. 다시 시도해주세요.' })
-  }
 
   return {
-    translations: items.map(item => ({ rowIndex: item.rowIndex, translatedText: translatedMap.get(item.rowIndex)! }))
+    translations: items
+      .filter(item => translatedMap.get(item.rowIndex)?.trim())
+      .map(item => ({ rowIndex: item.rowIndex, translatedText: translatedMap.get(item.rowIndex)! }))
   }
 })

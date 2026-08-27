@@ -201,6 +201,23 @@ export function useSubtitleTranslator() {
     })
   }
 
+  /**
+   * 배치에 속한 모든 행이 실제로 번역문을 갖고 있는지로 실패 여부를 판단해 failedBatchIndexes를 갱신한다.
+   * 배치 전체 재시도뿐 아니라 개별 행 재번역(retranslateOne)·수동 수정(updateTranslatedText)으로 빠진 행이
+   * 채워졌을 때도 이 함수를 거쳐야, 이미 다 채워진 배치가 "실패"로 계속 표시되는 일이 없다.
+   */
+  function syncBatchFailureState(batch: SubtitleBatch) {
+    const complete = batch.items.every((item) => {
+      const entry = entries.value.find(e => e.rowIndex === item.rowIndex)
+      return !!entry?.translatedText?.trim()
+    })
+    if (complete) {
+      failedBatchIndexes.value.delete(batch.batchIndex)
+    } else {
+      failedBatchIndexes.value.add(batch.batchIndex)
+    }
+  }
+
   async function runBatch(batch: SubtitleBatch): Promise<boolean> {
     const payload: SubtitleTranslateRequest = {
       settings: settings.value,
@@ -215,8 +232,10 @@ export function useSubtitleTranslator() {
         body: payload
       })
       applyTranslationResult(response)
-      failedBatchIndexes.value.delete(batch.batchIndex)
-      return true
+      syncBatchFailureState(batch)
+      const success = !failedBatchIndexes.value.has(batch.batchIndex)
+      if (!success) translationError.value = '일부 자막의 번역이 누락되었습니다. 실패한 Batch를 다시 시도해주세요.'
+      return success
     } catch (e) {
       failedBatchIndexes.value.add(batch.batchIndex)
       translationError.value = extractErrorMessage(e, '번역 중 오류가 발생했습니다.')
@@ -289,6 +308,8 @@ export function useSubtitleTranslator() {
         body: payload
       })
       applyTranslationResult(response)
+      const batch = batches.value.find(b => b.items.some(i => i.rowIndex === rowIndex))
+      if (batch) syncBatchFailureState(batch)
     } catch (e) {
       translationError.value = extractErrorMessage(e, '자막 재번역 중 오류가 발생했습니다.')
     } finally {
@@ -303,6 +324,8 @@ export function useSubtitleTranslator() {
 
   function updateTranslatedText(rowIndex: number, value: string) {
     entries.value = entries.value.map(e => (e.rowIndex === rowIndex ? { ...e, translatedText: value } : e))
+    const batch = batches.value.find(b => b.items.some(i => i.rowIndex === rowIndex))
+    if (batch) syncBatchFailureState(batch)
   }
 
   function downloadSrt() {
