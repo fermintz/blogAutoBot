@@ -1,5 +1,10 @@
 <script setup lang="ts">
+import { TOPIC_PLACEHOLDERS, type Topic } from '~~/shared/types'
+
+const props = defineProps<{ topic: Topic }>()
 const referenceContent = defineModel<string>({ required: true })
+
+const placeholder = computed(() => TOPIC_PLACEHOLDERS[props.topic].referenceContent)
 </script>
 
 <template>
@@ -11,7 +16,7 @@ const referenceContent = defineModel<string>({ required: true })
     <UTextarea
       v-model="referenceContent"
       :rows="8"
-      placeholder="예: 이번 신메뉴는 제철 딸기를 써서 만든 티라미수예요. 하루 20개 한정 판매..."
+      :placeholder="placeholder"
       class="w-full"
     />
   </UFormField>

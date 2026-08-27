@@ -1,5 +1,10 @@
 <script setup lang="ts">
+import { TOPIC_PLACEHOLDERS, type Topic } from '~~/shared/types'
+
+const props = defineProps<{ topic: Topic }>()
 const customTitle = defineModel<string>({ required: true })
+
+const placeholder = computed(() => TOPIC_PLACEHOLDERS[props.topic].customTitle)
 </script>
 
 <template>
@@ -10,7 +15,7 @@ const customTitle = defineModel<string>({ required: true })
   >
     <UInput
       v-model="customTitle"
-      placeholder="비워두면 자동으로 제목이 생성됩니다"
+      :placeholder="placeholder"
       class="w-full"
     />
   </UFormField>

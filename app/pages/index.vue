@@ -86,11 +86,18 @@ const seoScore = computed(() => {
             <KeywordSection
               v-model:main-keyword="mainKeyword"
               v-model:related-keywords-input="relatedKeywordsInput"
+              :topic="topic"
             />
             <USeparator />
-            <TitleSection v-model="customTitle" />
+            <TitleSection
+              v-model="customTitle"
+              :topic="topic"
+            />
             <USeparator />
-            <ReferenceSection v-model="referenceContent" />
+            <ReferenceSection
+              v-model="referenceContent"
+              :topic="topic"
+            />
             <USeparator />
             
             <StyleSection

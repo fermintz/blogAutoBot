@@ -92,6 +92,53 @@ export const TOPIC_BUSINESS_FIELDS: Record<Topic, TopicFieldDef[]> = {
   ]
 }
 
+export interface TopicPlaceholders {
+  mainKeyword: string
+  relatedKeywords: string
+  customTitle: string
+  referenceContent: string
+}
+
+/** 메인/연관 키워드·제목·참조 내용 입력란에 표시할 주제별 예시 placeholder. BusinessInfoSection과 달리 서버 프롬프트에는 쓰이지 않는 UI 전용 데이터라 값 자체는 자유 형식이다. */
+export const TOPIC_PLACEHOLDERS: Record<Topic, TopicPlaceholders> = {
+  restaurant: {
+    mainKeyword: '예: 강남 맛집',
+    relatedKeywords: '예: 강남역 맛집, 강남 데이트 코스, 강남 파스타',
+    customTitle: '예: 강남 파스타 맛집 OO, 웨이팅 없이 다녀온 후기',
+    referenceContent: '예: 이번 신메뉴는 제철 딸기를 써서 만든 티라미수예요. 하루 20개 한정 판매...'
+  },
+  travel: {
+    mainKeyword: '예: 강원도 여행지',
+    relatedKeywords: '예: 강원도 가볼만한곳, 동해 여행 코스, 강원도 당일치기',
+    customTitle: '예: 강원도 숨은 여행지 OO, 다녀온 솔직 후기',
+    referenceContent: '예: 이곳은 일출 명소로 유명해서 새벽에 방문하면 인생샷을 남길 수 있어요...'
+  },
+  tour: {
+    mainKeyword: '예: 서울 시티투어',
+    relatedKeywords: '예: 서울 투어 버스, 서울 당일 투어, 외국인 친구 서울여행',
+    customTitle: '예: 서울 시티투어 버스 타고 반나절 코스 완주 후기',
+    referenceContent: '예: 이 투어는 가이드가 동행해서 역사 설명을 들으며 이동할 수 있어요...'
+  },
+  ticket: {
+    mainKeyword: '예: OO전시회 티켓',
+    relatedKeywords: '예: OO전시회 예매, OO미술관 입장권, 주말 전시 추천',
+    customTitle: '예: OO전시회 예매부터 관람까지, 다녀온 후기',
+    referenceContent: '예: 이번 전시는 사전 예약제로 운영되며 현장 발권도 가능해요...'
+  },
+  stay: {
+    mainKeyword: '예: 강원도 펜션 추천',
+    relatedKeywords: '예: 강원도 오션뷰 펜션, 애견동반 펜션, 가족 여행 숙소',
+    customTitle: '예: 강원도 오션뷰 펜션 OO, 1박2일 다녀온 후기',
+    referenceContent: '예: 이 펜션은 전 객실 오션뷰로 구성되어 있고 바베큐장을 무료로 이용할 수 있어요...'
+  },
+  product: {
+    mainKeyword: '예: 무선 이어폰 추천',
+    relatedKeywords: '예: 가성비 이어폰, 노이즈캔슬링 이어폰, 커플 선물 추천',
+    customTitle: '예: 무선 이어폰 OO 한 달 사용 후기, 이 가격에 이 성능?',
+    referenceContent: '예: 이번 신제품은 노이즈캔슬링 기능이 추가됐고 배터리는 최대 24시간 지속돼요...'
+  }
+}
+
 /** 네이버 검색(지역) API로 조회한 업체 후보 1건. 서비스 공용 키로 조회하며, 사용자별로 저장하지 않는다. */
 export interface NaverBusinessCandidate {
   title: string

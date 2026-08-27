@@ -1,6 +1,11 @@
 <script setup lang="ts">
+import { TOPIC_PLACEHOLDERS, type Topic } from '~~/shared/types'
+
+const props = defineProps<{ topic: Topic }>()
 const mainKeyword = defineModel<string>('mainKeyword', { required: true })
 const relatedKeywordsInput = defineModel<string>('relatedKeywordsInput', { required: true })
+
+const placeholders = computed(() => TOPIC_PLACEHOLDERS[props.topic])
 </script>
 
 <template>
@@ -13,7 +18,7 @@ const relatedKeywordsInput = defineModel<string>('relatedKeywordsInput', { requi
     >
       <UInput
         v-model="mainKeyword"
-        placeholder="예: 강남 맛집"
+        :placeholder="placeholders.mainKeyword"
         class="w-full"
       />
     </UFormField>
@@ -25,7 +30,7 @@ const relatedKeywordsInput = defineModel<string>('relatedKeywordsInput', { requi
     >
       <UInput
         v-model="relatedKeywordsInput"
-        placeholder="예: 강남역 맛집, 강남 데이트 코스, 강남 파스타"
+        :placeholder="placeholders.relatedKeywords"
         class="w-full"
       />
     </UFormField>
