@@ -66,6 +66,24 @@ const YOUTUBE_RESPONSE_SCHEMA = {
   required: ['titles', 'descriptionIntro']
 }
 
+const SUBTITLE_TRANSLATE_RESPONSE_SCHEMA = {
+  type: 'OBJECT',
+  properties: {
+    translations: {
+      type: 'ARRAY',
+      items: {
+        type: 'OBJECT',
+        properties: {
+          rowIndex: { type: 'NUMBER' },
+          translatedText: { type: 'STRING' }
+        },
+        required: ['rowIndex', 'translatedText']
+      }
+    }
+  },
+  required: ['translations']
+}
+
 interface GeminiSuccessBody {
   candidates?: Array<{
     content?: { parts?: Array<{ text?: string }> }
@@ -219,6 +237,22 @@ export async function callGeminiReelsScript(apiKey: string, systemPrompt: string
     cta: toReelsSegment('cta', parsed.cta),
     hashtags: Array.isArray(parsed.hashtags) ? parsed.hashtags : []
   }
+}
+
+export async function callGeminiSubtitleTranslate(apiKey: string, systemPrompt: string, userPrompt: string, options?: { temperature?: number }): Promise<{ rowIndex: number, translatedText: string }[]> {
+  const parsed = await callGeminiJson<{ translations?: Array<{ rowIndex?: number, translatedText?: string }> }>(
+    apiKey, systemPrompt, userPrompt, SUBTITLE_TRANSLATE_RESPONSE_SCHEMA, options?.temperature ?? 0.7
+  )
+
+  const translations = Array.isArray(parsed.translations)
+    ? parsed.translations.filter((t): t is { rowIndex: number, translatedText: string } => typeof t.rowIndex === 'number' && !!t.translatedText)
+    : []
+
+  if (translations.length === 0) {
+    throw createError({ statusCode: 502, statusMessage: '자막 번역 결과를 받지 못했습니다. 다시 시도해주세요.' })
+  }
+
+  return translations
 }
 
 export async function validateGeminiKey(apiKey: string): Promise<void> {

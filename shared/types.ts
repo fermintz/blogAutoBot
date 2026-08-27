@@ -543,3 +543,104 @@ export interface SavedYoutubeGeneration {
   contact: string
   result: YoutubeGenerationResult
 }
+
+/** CSV 한 행의 원본 데이터. 컬럼명이 CSV마다 달라 고정 스키마 대신 값 맵으로 보존하며, 번역 대상 컬럼 외에는 그대로 다운로드에 다시 쓰인다. */
+export type SubtitleCsvRow = Record<string, string>
+
+/**
+ * 자막 번역기가 다루는 CSV 한 행. row는 원본 컬럼을 전부 보존한 값 맵이고, sourceText는 그중 번역 대상 컬럼의 값을 꺼내 온 것이다.
+ * rowIndex는 CSV의 어떤 컬럼값도 아닌, 파싱된 행 배열에서의 0-based 위치일 뿐이라 "번호"류 데이터 컬럼과 무관하게 항상 안정적으로 행을 식별한다.
+ */
+export interface SubtitleCsvEntry {
+  rowIndex: number
+  row: SubtitleCsvRow
+  sourceText: string
+  translatedText?: string
+}
+
+export const SUBTITLE_SOURCE_LANGUAGE_OPTIONS = [
+  { value: 'auto', label: '자동 감지' },
+  { value: 'ko', label: '한국어' },
+  { value: 'en', label: '영어' },
+  { value: 'ja', label: '일본어' },
+  { value: 'zh', label: '중국어' },
+  { value: 'vi', label: '베트남어' },
+  { value: 'th', label: '태국어' },
+  { value: 'es', label: '스페인어' },
+  { value: 'fr', label: '프랑스어' },
+  { value: 'de', label: '독일어' },
+  { value: 'id', label: '인도네시아어' }
+] as const
+
+export type SubtitleSourceLanguage = typeof SUBTITLE_SOURCE_LANGUAGE_OPTIONS[number]['value']
+
+/** 번역 대상 언어는 "자동 감지"를 지원하지 않아 원본 언어 목록과 별도로 정의한다. */
+export const SUBTITLE_TARGET_LANGUAGE_OPTIONS = [
+  { value: 'en', label: '영어' },
+  { value: 'ja', label: '일본어' },
+  { value: 'zh', label: '중국어' },
+  { value: 'vi', label: '베트남어' },
+  { value: 'th', label: '태국어' },
+  { value: 'es', label: '스페인어' },
+  { value: 'fr', label: '프랑스어' },
+  { value: 'de', label: '독일어' },
+  { value: 'id', label: '인도네시아어' },
+  { value: 'ko', label: '한국어' }
+] as const
+
+export type SubtitleTargetLanguage = typeof SUBTITLE_TARGET_LANGUAGE_OPTIONS[number]['value']
+
+export const SUBTITLE_STYLE_OPTIONS = [
+  { value: 'subtitle', label: '영상 자막' },
+  { value: 'natural', label: '자연스러운 번역' },
+  { value: 'literal', label: '직역' },
+  { value: 'vlog', label: '브이로그' }
+] as const
+
+export type SubtitleStyle = typeof SUBTITLE_STYLE_OPTIONS[number]['value']
+
+export const SUBTITLE_TONE_OPTIONS = [
+  { value: 'original', label: '원문 말투 유지' },
+  { value: 'polite', label: '존댓말' },
+  { value: 'casual', label: '반말' },
+  { value: 'natural', label: '자연스럽게' }
+] as const
+
+export type SubtitleTone = typeof SUBTITLE_TONE_OPTIONS[number]['value']
+
+export const SUBTITLE_LINE_BREAK_OPTIONS = [
+  { value: 'auto', label: '자동 줄바꿈' },
+  { value: 'preserve', label: '원문 유지' }
+] as const
+
+export type SubtitleLineBreakMode = typeof SUBTITLE_LINE_BREAK_OPTIONS[number]['value']
+
+export interface SubtitleTranslationSettings {
+  sourceLanguage: SubtitleSourceLanguage
+  targetLanguage: SubtitleTargetLanguage
+  style: SubtitleStyle
+  tone: SubtitleTone
+  lineBreakMode: SubtitleLineBreakMode
+}
+
+/** 배치 하나에 실제로 번역을 요청할 자막 1건. rowIndex는 SubtitleCsvEntry.rowIndex와 동일한 값이다. */
+export interface SubtitleTranslateItem {
+  rowIndex: number
+  text: string
+}
+
+/** contextBefore/contextAfter는 번역 품질을 위한 문맥 참고용 자막일 뿐, 번역 대상이 아니며 응답에도 포함되지 않는다. */
+export interface SubtitleTranslateRequest {
+  settings: SubtitleTranslationSettings
+  items: SubtitleTranslateItem[]
+  contextBefore?: SubtitleTranslateItem[]
+  contextAfter?: SubtitleTranslateItem[]
+}
+
+export interface SubtitleTranslateResponse {
+  translations: { rowIndex: number, translatedText: string }[]
+}
+
+/** 자막이 많을 때 한 번의 AI 요청으로 보낼 최대 개수. 문맥 참고용 앞/뒤 자막 개수(SUBTITLE_CONTEXT_WINDOW)는 이와 별개로 배치 경계에서만 추가된다. */
+export const SUBTITLE_BATCH_SIZE = 40
+export const SUBTITLE_CONTEXT_WINDOW = 3

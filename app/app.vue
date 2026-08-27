@@ -8,7 +8,8 @@ const navLinks = [
   { label: 'SEO체크', to: '/seo-check', icon: 'i-lucide-search-check' },
   { label: '릴스자막', to: '/reels', icon: 'i-lucide-clapperboard' },
   { label: '인스타', to: '/instagram', icon: 'i-lucide-instagram' },
-  { label: '유튜브', to: '/youtube', icon: 'i-lucide-youtube' }
+  { label: '유튜브', to: '/youtube', icon: 'i-lucide-youtube' },
+  { label: '자막번역', to: '/subtitle-translator', icon: 'i-lucide-captions' }
 ]
 
 const navMenuItems = computed(() =>
