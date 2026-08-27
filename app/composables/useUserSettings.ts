@@ -33,10 +33,15 @@ export function useUserSettings() {
   async function fetchSettings() {
     await client.auth.getSession()
 
-    const { data } = await client
+    const { data, error } = await client
       .from('user_settings')
       .select('topic, business_info_by_topic, body_templates, writing_rules, tone, length, api_key_encrypted')
       .maybeSingle<UserSettingsRow>()
+
+    if (error) {
+      // eslint-disable-next-line no-console
+      console.error('[useUserSettings] fetchSettings 실패:', error)
+    }
 
     if (data) {
       topic.value = data.topic
