@@ -615,6 +615,20 @@ export const SUBTITLE_LINE_BREAK_OPTIONS = [
 
 export type SubtitleLineBreakMode = typeof SUBTITLE_LINE_BREAK_OPTIONS[number]['value']
 
+/** CSV 시간 컬럼이 "시:분:초:프레임" SMPTE 타임코드일 때 프레임 번호를 초로 환산하는 데 쓰는 초당 프레임 수 후보. */
+export const SUBTITLE_FPS_OPTIONS = [
+  { value: 23.976, label: '23.976fps' },
+  { value: 24, label: '24fps' },
+  { value: 25, label: '25fps' },
+  { value: 29.97, label: '29.97fps' },
+  { value: 30, label: '30fps' },
+  { value: 50, label: '50fps' },
+  { value: 59.94, label: '59.94fps' },
+  { value: 60, label: '60fps' }
+] as const
+
+export type SubtitleFps = typeof SUBTITLE_FPS_OPTIONS[number]['value']
+
 export interface SubtitleTranslationSettings {
   sourceLanguage: SubtitleSourceLanguage
   targetLanguage: SubtitleTargetLanguage

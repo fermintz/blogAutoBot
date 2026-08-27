@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import {
+  SUBTITLE_FPS_OPTIONS,
   SUBTITLE_LINE_BREAK_OPTIONS,
   SUBTITLE_SOURCE_LANGUAGE_OPTIONS,
   SUBTITLE_STYLE_OPTIONS,
   SUBTITLE_TARGET_LANGUAGE_OPTIONS,
   SUBTITLE_TONE_OPTIONS
 } from '~~/shared/types'
-import type { SubtitleLineBreakMode, SubtitleSourceLanguage, SubtitleStyle, SubtitleTargetLanguage, SubtitleTone } from '~~/shared/types'
+import type { SubtitleFps, SubtitleLineBreakMode, SubtitleSourceLanguage, SubtitleStyle, SubtitleTargetLanguage, SubtitleTone } from '~~/shared/types'
 
 const props = defineProps<{
   sameLanguageWarning: boolean
@@ -29,12 +30,14 @@ const targetLanguage = defineModel<SubtitleTargetLanguage>('targetLanguage', { r
 const style = defineModel<SubtitleStyle>('style', { required: true })
 const tone = defineModel<SubtitleTone>('tone', { required: true })
 const lineBreakMode = defineModel<SubtitleLineBreakMode>('lineBreakMode', { required: true })
+const fps = defineModel<SubtitleFps>('fps', { required: true })
 
 const sourceLanguageItems = SUBTITLE_SOURCE_LANGUAGE_OPTIONS.map(o => ({ label: o.label, value: o.value }))
 const targetLanguageItems = SUBTITLE_TARGET_LANGUAGE_OPTIONS.map(o => ({ label: o.label, value: o.value }))
 const styleItems = SUBTITLE_STYLE_OPTIONS.map(o => ({ label: o.label, value: o.value }))
 const toneItems = SUBTITLE_TONE_OPTIONS.map(o => ({ label: o.label, value: o.value }))
 const lineBreakItems = SUBTITLE_LINE_BREAK_OPTIONS.map(o => ({ label: o.label, value: o.value }))
+const fpsItems = SUBTITLE_FPS_OPTIONS.map(o => ({ label: o.label, value: o.value }))
 </script>
 
 <template>
@@ -82,6 +85,20 @@ const lineBreakItems = SUBTITLE_LINE_BREAK_OPTIONS.map(o => ({ label: o.label, v
           placeholder="종료 시간 컬럼을 선택하세요"
           class="w-full"
           @update:model-value="(value) => emit('select-end-column', String(value))"
+        />
+      </UFormField>
+
+      <UFormField
+        label="영상 프레임 수(fps)"
+        description="시간 컬럼이 &quot;시:분:초:프레임&quot; 형식(예: 00:00:12:13)일 때만 사용됩니다. 원본 영상의 fps와 맞아야 정확한 타이밍으로 내보내집니다."
+        class="sm:col-span-2"
+        required
+      >
+        <USelect
+          v-model="fps"
+          :items="fpsItems"
+          value-key="value"
+          class="w-full"
         />
       </UFormField>
     </div>

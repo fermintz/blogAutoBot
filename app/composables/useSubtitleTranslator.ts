@@ -5,6 +5,7 @@ import {
 } from '~~/shared/types'
 import type {
   SubtitleCsvEntry,
+  SubtitleFps,
   SubtitleLineBreakMode,
   SubtitleSourceLanguage,
   SubtitleStyle,
@@ -45,6 +46,8 @@ export function useSubtitleTranslator() {
   const style = ref<SubtitleStyle>('subtitle')
   const tone = ref<SubtitleTone>('original')
   const lineBreakMode = ref<SubtitleLineBreakMode>('auto')
+  /** 시작/종료 컬럼이 "시:분:초:프레임" SMPTE 타임코드일 때만 쓰이는 초당 프레임 수. 파일마다 달라질 수 있어 사용자가 직접 고른다. */
+  const fps = ref<SubtitleFps>(30)
 
   const settings = computed<SubtitleTranslationSettings>(() => ({
     sourceLanguage: sourceLanguage.value,
@@ -79,7 +82,7 @@ export function useSubtitleTranslator() {
   )
 
   const validationIssues = computed<SubtitleValidationIssue[]>(() =>
-    validateFinalSubtitles(entries.value, originalRowCount.value, startColumn.value, endColumn.value)
+    validateFinalSubtitles(entries.value, originalRowCount.value, startColumn.value, endColumn.value, fps.value)
   )
   const isDownloadReady = computed(() => hasAnyTranslation.value && validationIssues.value.every(i => i.level !== 'error'))
 
@@ -304,7 +307,7 @@ export function useSubtitleTranslator() {
 
   function downloadSrt() {
     if (!isDownloadReady.value || !startColumn.value || !endColumn.value) return
-    const srtText = buildSrtFromEntries(entries.value, startColumn.value, endColumn.value)
+    const srtText = buildSrtFromEntries(entries.value, startColumn.value, endColumn.value, fps.value)
     const blob = new Blob([srtText], { type: 'text/plain;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const anchor = document.createElement('a')
@@ -333,6 +336,7 @@ export function useSubtitleTranslator() {
     style,
     tone,
     lineBreakMode,
+    fps,
     sameLanguageWarning,
     translationStatus,
     translationError,

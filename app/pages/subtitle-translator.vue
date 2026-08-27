@@ -16,6 +16,7 @@ const {
   style,
   tone,
   lineBreakMode,
+  fps,
   sameLanguageWarning,
   translationError,
   currentBatch,
@@ -101,6 +102,7 @@ const {
                 v-model:style="style"
                 v-model:tone="tone"
                 v-model:line-break-mode="lineBreakMode"
+                v-model:fps="fps"
                 :same-language-warning="sameLanguageWarning"
                 :headers="headers"
                 :source-column="sourceColumn"

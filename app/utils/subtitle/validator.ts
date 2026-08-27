@@ -15,7 +15,8 @@ export function validateFinalSubtitles(
   entries: SubtitleCsvEntry[],
   originalRowCount: number,
   startColumn: string | null,
-  endColumn: string | null
+  endColumn: string | null,
+  fps: number
 ): SubtitleValidationIssue[] {
   const issues: SubtitleValidationIssue[] = []
 
@@ -35,8 +36,8 @@ export function validateFinalSubtitles(
   }
 
   for (const entry of entries) {
-    const start = parseTimecodeToSeconds(entry.row[startColumn] ?? '')
-    const end = parseTimecodeToSeconds(entry.row[endColumn] ?? '')
+    const start = parseTimecodeToSeconds(entry.row[startColumn] ?? '', fps)
+    const end = parseTimecodeToSeconds(entry.row[endColumn] ?? '', fps)
     if (start === null || end === null) {
       issues.push({ level: 'error', message: `${entry.rowIndex + 1}번째 행의 시작/종료 시간을 인식할 수 없습니다.` })
     } else if (end <= start) {
