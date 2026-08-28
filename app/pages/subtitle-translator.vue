@@ -135,7 +135,7 @@ const {
 
       <div class="lg:col-span-7 space-y-6 lg:sticky lg:top-6">
         <UAlert
-          v-if="translationError && failedBatchIndexes.size === 0"
+          v-if="translationError && !hasAnyTranslation"
           color="error"
           variant="subtle"
           icon="i-lucide-triangle-alert"
