@@ -1,4 +1,6 @@
 <script setup lang="ts">
+definePageMeta({ middleware: 'guest' })
+
 const client = useSupabaseClient()
 
 const email = ref('')

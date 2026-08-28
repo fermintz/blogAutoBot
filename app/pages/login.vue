@@ -1,4 +1,6 @@
 <script setup lang="ts">
+definePageMeta({ middleware: 'guest' })
+
 const REMEMBER_EMAIL_KEY = 'autoblog:savedEmail'
 
 const client = useSupabaseClient()
