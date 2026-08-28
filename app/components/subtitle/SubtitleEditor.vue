@@ -4,6 +4,7 @@ import type { SubtitleCsvEntry } from '~~/shared/types'
 defineProps<{
   entries: SubtitleCsvEntry[]
   retranslatingIndex: number | null
+  isTranslating: boolean
 }>()
 
 const emit = defineEmits<{
@@ -49,7 +50,7 @@ const emit = defineEmits<{
             variant="subtle"
             icon="i-lucide-refresh-cw"
             :loading="retranslatingIndex === entry.rowIndex"
-            :disabled="retranslatingIndex !== null && retranslatingIndex !== entry.rowIndex"
+            :disabled="isTranslating || (retranslatingIndex !== null && retranslatingIndex !== entry.rowIndex)"
             @click="emit('retranslate-one', entry.rowIndex)"
           >
             다시 번역

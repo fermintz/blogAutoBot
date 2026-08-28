@@ -9,6 +9,7 @@ const props = defineProps<{
   parseErrors: string[]
   parseWarnings: string[]
   needsColumnSelection: boolean
+  needsTimeColumnSelection: boolean
 }>()
 
 const emit = defineEmits<{
@@ -101,6 +102,15 @@ const fileSizeLabel = computed(() => {
         icon="i-lucide-triangle-alert"
         title="번역할 자막 컬럼을 찾을 수 없습니다."
         description="번역할 컬럼을 직접 선택해주세요."
+      />
+
+      <UAlert
+        v-else-if="needsTimeColumnSelection"
+        color="warning"
+        variant="subtle"
+        icon="i-lucide-triangle-alert"
+        title="시작/종료 시간 컬럼을 찾을 수 없습니다."
+        description="SRT로 내보내려면 아래에서 시작/종료 시간 컬럼을 직접 선택해주세요. 선택하지 않으면 번역 후 다운로드할 수 없습니다."
       />
 
       <UAlert

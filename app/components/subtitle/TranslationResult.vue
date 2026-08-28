@@ -83,6 +83,7 @@ const warningIssues = computed(() => props.validationIssues.filter(i => i.level 
       <SubtitleEditor
         :entries="entries"
         :retranslating-index="retranslatingIndex"
+        :is-translating="isTranslating"
         @update-text="(rowIndex, value) => emit('update-text', rowIndex, value)"
         @retranslate-one="(rowIndex) => emit('retranslate-one', rowIndex)"
       />

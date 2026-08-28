@@ -63,6 +63,8 @@ export function useSubtitleTranslator() {
 
   /** CSV 파싱은 성공했지만 번역 대상 컬럼을 자동으로 찾지 못해 사용자가 직접 골라야 하는 상태. */
   const needsColumnSelection = computed(() => parseStatus.value === 'ready' && !sourceColumn.value)
+  /** 시작/종료 시간 컬럼을 자동으로 찾지 못한 상태. 번역을 다 끝낸 뒤 다운로드 단계에서야 알게 되면 번역을 다시 해야 하니, 업로드 직후에 미리 알려준다. */
+  const needsTimeColumnSelection = computed(() => parseStatus.value === 'ready' && (!startColumn.value || !endColumn.value))
 
   const translationStatus = ref<SubtitleTranslationStatus>('idle')
   const translationError = ref('')
@@ -266,13 +268,6 @@ export function useSubtitleTranslator() {
     await translateBatches(batches.value)
   }
 
-  async function retryBatch(batchIndex: number) {
-    if (isTranslating.value) return
-    const batch = batches.value.find(b => b.batchIndex === batchIndex)
-    if (!batch) return
-    await translateBatches([batch])
-  }
-
   async function retryAllFailedBatches() {
     if (isTranslating.value) return
     const targets = batches.value.filter(b => failedBatchIndexes.value.has(b.batchIndex))
@@ -289,7 +284,7 @@ export function useSubtitleTranslator() {
   }
 
   async function retranslateOne(rowIndex: number) {
-    if (retranslatingIndex.value !== null) return
+    if (retranslatingIndex.value !== null || isTranslating.value) return
     const entry = entries.value.find(e => e.rowIndex === rowIndex)
     if (!entry) return
 
@@ -351,6 +346,7 @@ export function useSubtitleTranslator() {
     startColumn,
     endColumn,
     needsColumnSelection,
+    needsTimeColumnSelection,
     parseStatus,
     parseErrors,
     parseWarnings,
@@ -380,7 +376,6 @@ export function useSubtitleTranslator() {
     selectEndColumn,
     resetAll,
     startTranslate,
-    retryBatch,
     retryAllFailedBatches,
     retranslateOne,
     retranslateAll,

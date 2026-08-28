@@ -8,6 +8,7 @@ const {
   startColumn,
   endColumn,
   needsColumnSelection,
+  needsTimeColumnSelection,
   parseStatus,
   parseErrors,
   parseWarnings,
@@ -91,6 +92,7 @@ const {
               :parse-errors="parseErrors"
               :parse-warnings="parseWarnings"
               :needs-column-selection="needsColumnSelection"
+              :needs-time-column-selection="needsTimeColumnSelection"
               @select="loadFile"
             />
 
