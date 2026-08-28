@@ -658,3 +658,5 @@ export interface SubtitleTranslateResponse {
 /** 자막이 많을 때 한 번의 AI 요청으로 보낼 최대 개수. 문맥 참고용 앞/뒤 자막 개수(SUBTITLE_CONTEXT_WINDOW)는 이와 별개로 배치 경계에서만 추가된다. */
 export const SUBTITLE_BATCH_SIZE = 40
 export const SUBTITLE_CONTEXT_WINDOW = 3
+/** 배치 번역 요청을 동시에 몇 개까지 보낼지. 사용자 개인 Gemini API 키의 무료 등급 분당 요청 한도를 넘기지 않도록 보수적으로 잡는다. */
+export const SUBTITLE_BATCH_CONCURRENCY = 3

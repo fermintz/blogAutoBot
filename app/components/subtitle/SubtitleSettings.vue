@@ -90,7 +90,7 @@ const fpsItems = SUBTITLE_FPS_OPTIONS.map(o => ({ label: o.label, value: o.value
 
       <UFormField
         label="영상 프레임 수(fps)"
-        description="시간 컬럼이 &quot;시:분:초:프레임&quot; 형식(예: 00:00:12:13)일 때만 사용됩니다. 원본 영상의 fps와 맞아야 정확한 타이밍으로 내보내집니다."
+        description="시간 컬럼이 &quot;시:분:초:프레임&quot; 형식(예: 00:00:12:13)일 때만 사용됩니다. 원본 영상의 fps와 맞아야 정확한 타이밍으로 내보내집니다. Drop Frame 여부는 타임코드의 구분자(세미콜론)로 자동 판별되어 따로 선택할 필요가 없습니다."
         class="sm:col-span-2"
         required
       >

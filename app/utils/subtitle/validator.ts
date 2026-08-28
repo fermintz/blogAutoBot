@@ -36,14 +36,28 @@ export function validateFinalSubtitles(
   }
 
   for (const entry of entries) {
-    const start = parseTimecodeToSeconds(entry.row[startColumn] ?? '', fps)
-    const end = parseTimecodeToSeconds(entry.row[endColumn] ?? '', fps)
-    if (start === null || end === null) {
-      issues.push({ level: 'error', message: `${entry.rowIndex + 1}번째 행의 시작/종료 시간을 인식할 수 없습니다.` })
-    } else if (end <= start) {
-      issues.push({ level: 'error', message: `${entry.rowIndex + 1}번째 행의 종료 시간이 시작 시간보다 빠르거나 같습니다.` })
+    const startIssue = describeTimecodeIssue(entry.row[startColumn], fps)
+    if (startIssue) issues.push({ level: 'error', message: `${entry.rowIndex + 1}번째 행의 시작 시간(${startColumn})${startIssue}` })
+
+    const endIssue = describeTimecodeIssue(entry.row[endColumn], fps)
+    if (endIssue) issues.push({ level: 'error', message: `${entry.rowIndex + 1}번째 행의 종료 시간(${endColumn})${endIssue}` })
+
+    if (!startIssue && !endIssue) {
+      const start = parseTimecodeToSeconds(entry.row[startColumn] ?? '', fps)!
+      const end = parseTimecodeToSeconds(entry.row[endColumn] ?? '', fps)!
+      if (end <= start) {
+        issues.push({ level: 'error', message: `${entry.rowIndex + 1}번째 행의 종료 시간이 시작 시간보다 빠르거나 같습니다.` })
+      }
     }
   }
 
   return issues
+}
+
+/** 값이 비어 있는지, 형식이 잘못됐는지를 구분해 원인이 드러나는 문구를 반환한다. 문제가 없으면 null. */
+function describeTimecodeIssue(rawValue: string | undefined, fps: number): string | null {
+  const value = (rawValue ?? '').trim()
+  if (!value) return '이 비어 있습니다.'
+  if (parseTimecodeToSeconds(value, fps) === null) return `의 형식이 올바르지 않습니다: "${value}"`
+  return null
 }

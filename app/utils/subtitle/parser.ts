@@ -107,10 +107,39 @@ export async function parseCsvText(raw: string, sourceColumn?: string | null): P
 }
 
 /**
- * ArrayBuffer를 CSV 텍스트로 디코딩한다. UTF-8(BOM 포함)을 우선 시도하고,
- * Excel에서 저장된 CP949/EUC-KR 인코딩처럼 한글이 깨지는 신호(치환 문자 U+FFFD)가 보이면 EUC-KR로 재시도한다.
+ * Premiere Pro는 Windows에서 마커/트랜스크립트를 CSV로 내보낼 때 UTF-16(LE)으로 저장하는 경우가 흔하다.
+ * 이 인코딩을 UTF-8로 잘못 읽으면(ASCII 범위 문자는 바이트가 전부 0x00~0x7F라 "유효한" UTF-8로 오인되어
+ * 치환 문자 U+FFFD가 전혀 나타나지 않는다) 모든 글자 사이에 U+0000이 끼어든 문자열이 되고, 그 결과 CSV 헤더는
+ * 물론 "00:00:12:13" 같은 타임코드 숫자까지 한 글자씩 떨어져 SMPTE 정규식에 전혀 매칭되지 않는다 — 즉
+ * U+FFFD 유무만으로는 이 실패를 감지할 수 없으므로 BOM과 별도로 반드시 먼저 확인해야 한다.
+ */
+function decodeUtf16IfDetected(buffer: ArrayBuffer): string | null {
+  const bytes = new Uint8Array(buffer)
+  if (bytes.length < 2) return null
+
+  if (bytes[0] === 0xFF && bytes[1] === 0xFE) return new TextDecoder('utf-16le').decode(buffer)
+  if (bytes[0] === 0xFE && bytes[1] === 0xFF) return new TextDecoder('utf-16be').decode(buffer)
+
+  // BOM이 없는 UTF-16LE 대응: ASCII/영문 CSV는 짝수(0-based 홀수) 오프셋 바이트가 대부분 0x00이 된다.
+  const sampleLength = Math.min(bytes.length, 400) - (Math.min(bytes.length, 400) % 2)
+  if (sampleLength < 8) return null
+  let zeroAtOddOffset = 0
+  for (let i = 1; i < sampleLength; i += 2) {
+    if (bytes[i] === 0x00) zeroAtOddOffset++
+  }
+  const ratio = zeroAtOddOffset / (sampleLength / 2)
+  return ratio > 0.6 ? new TextDecoder('utf-16le').decode(buffer) : null
+}
+
+/**
+ * ArrayBuffer를 CSV 텍스트로 디코딩한다. UTF-16(BOM 유무 모두)을 먼저 감지해서 처리하고,
+ * 그 다음 UTF-8(BOM 포함)을 시도하며, Excel에서 저장된 CP949/EUC-KR 인코딩처럼 한글이 깨지는
+ * 신호(치환 문자 U+FFFD)가 보이면 EUC-KR로 재시도한다.
  */
 export function decodeCsvBuffer(buffer: ArrayBuffer): string {
+  const utf16Text = decodeUtf16IfDetected(buffer)
+  if (utf16Text !== null) return utf16Text
+
   const utf8Text = new TextDecoder('utf-8').decode(buffer)
   if (!utf8Text.includes('�')) return utf8Text
 

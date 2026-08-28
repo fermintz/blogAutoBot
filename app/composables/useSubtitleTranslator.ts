@@ -1,4 +1,5 @@
 import {
+  SUBTITLE_BATCH_CONCURRENCY,
   SUBTITLE_BATCH_SIZE,
   SUBTITLE_CONTEXT_WINDOW,
   SUBTITLE_TARGET_LANGUAGE_OPTIONS
@@ -21,6 +22,7 @@ import { wrapSubtitleText } from '../utils/subtitle/formatter'
 import { buildSrtDownloadFilename, buildSrtFromEntries } from '../utils/subtitle/srt'
 import { validateFinalSubtitles } from '../utils/subtitle/validator'
 import { chunkEntriesForTranslation } from '../utils/subtitle/chunker'
+import { runWithConcurrency } from '../utils/subtitle/concurrency'
 import type { SubtitleBatch } from '../utils/subtitle/chunker'
 import type { SubtitleValidationIssue } from '../utils/subtitle/validator'
 
@@ -220,7 +222,12 @@ export function useSubtitleTranslator() {
     }
   }
 
-  async function runBatch(batch: SubtitleBatch): Promise<boolean> {
+  /**
+   * token은 이 배치를 요청한 translateBatches 호출이 여전히 "현재" 실행인지 확인하는 용도다.
+   * 응답이 도착했을 때 이미 파일 재업로드/초기화로 requestToken이 바뀌었다면, 그 사이 entries가
+   * 통째로 교체됐을 수 있으므로 stale한 결과로 상태를 덮어쓰지 않고 조용히 무시한다.
+   */
+  async function runBatch(batch: SubtitleBatch, token: number): Promise<boolean> {
     const payload: SubtitleTranslateRequest = {
       settings: settings.value,
       items: batch.items,
@@ -233,28 +240,32 @@ export function useSubtitleTranslator() {
         method: 'POST',
         body: payload
       })
+      if (token !== requestToken) return false
       applyTranslationResult(response)
       syncBatchFailureState(batch)
       const success = !failedBatchIndexes.value.has(batch.batchIndex)
       if (!success) translationError.value = '일부 자막의 번역이 누락되었습니다. 실패한 Batch를 다시 시도해주세요.'
       return success
     } catch (e) {
+      if (token !== requestToken) return false
       failedBatchIndexes.value.add(batch.batchIndex)
       translationError.value = extractErrorMessage(e, '번역 중 오류가 발생했습니다.')
       return false
     }
   }
 
+  /** 배치를 SUBTITLE_BATCH_CONCURRENCY개까지 동시에 번역한다. 배치가 많을수록(자막이 많을수록) 순차 처리보다 훨씬 빠르다. */
   async function translateBatches(targetBatches: SubtitleBatch[]) {
     const token = ++requestToken
     translationStatus.value = 'translating'
     translationError.value = ''
 
-    for (const batch of targetBatches) {
+    await runWithConcurrency(targetBatches, SUBTITLE_BATCH_CONCURRENCY, async (batch) => {
       if (token !== requestToken) return
-      currentBatch.value = batch.batchIndex + 1
-      await runBatch(batch)
-    }
+      await runBatch(batch, token)
+      if (token !== requestToken) return
+      currentBatch.value += 1
+    })
 
     if (token !== requestToken) return
     translationStatus.value = failedBatchIndexes.value.size > 0 ? 'error' : 'done'
