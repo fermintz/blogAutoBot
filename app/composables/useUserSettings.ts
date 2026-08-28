@@ -7,7 +7,6 @@ interface UserSettingsRow {
   writing_rules: string | null
   tone: ToneStyle
   length: LengthOption
-  api_key_encrypted: string | null
 }
 
 export function useUserSettings() {
@@ -33,13 +32,20 @@ export function useUserSettings() {
   async function fetchSettings() {
     await client.auth.getSession()
 
-    const { data, error } = await client
-      .from('user_settings')
-      .select('topic, business_info_by_topic, body_templates, writing_rules, tone, length, api_key_encrypted')
-      .maybeSingle<UserSettingsRow>()
+    // api_key_encrypted(암호문 자체)는 boolean 판별 외에는 쓸 일이 없어 여기서 select하지 않는다.
+    // 등록 여부는 /api/settings/has-api-key가 서버에서만 컬럼을 조회해 boolean으로 변환해 돌려준다.
+    const [{ data, error }, hasApiKeyResult] = await Promise.all([
+      client
+        .from('user_settings')
+        .select('topic, business_info_by_topic, body_templates, writing_rules, tone, length')
+        .maybeSingle<UserSettingsRow>(),
+      $fetch<{ hasApiKey: boolean }>('/api/settings/has-api-key').catch((e) => {
+        console.error('[useUserSettings] has-api-key 조회 실패:', e)
+        return null
+      })
+    ])
 
     if (error) {
-      // eslint-disable-next-line no-console
       console.error('[useUserSettings] fetchSettings 실패:', error)
     }
 
@@ -50,7 +56,9 @@ export function useUserSettings() {
       writingRules.value = data.writing_rules ?? ''
       tone.value = data.tone
       length.value = data.length
-      hasApiKey.value = data.api_key_encrypted !== null
+    }
+    if (hasApiKeyResult) {
+      hasApiKey.value = hasApiKeyResult.hasApiKey
     }
     loaded.value = true
   }

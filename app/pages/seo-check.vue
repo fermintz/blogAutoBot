@@ -150,8 +150,8 @@ function resetForm() {
               block
               size="lg"
               :disabled="!canCheck"
-              @click="checkSeo"
               class="disabled:bg-gray-400"
+              @click="checkSeo"
             >
               SEO 점수 체크하기
             </UButton>

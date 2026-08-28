@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { TOPIC_PLACEHOLDERS, type Topic } from '~~/shared/types'
+import { SHORT_LABEL_MAX_LENGTH, TOPIC_PLACEHOLDERS, type Topic } from '~~/shared/types'
 
 const props = defineProps<{ topic: Topic }>()
 const customTitle = defineModel<string>({ required: true })
@@ -15,6 +15,7 @@ const placeholder = computed(() => TOPIC_PLACEHOLDERS[props.topic].customTitle)
   >
     <UInput
       v-model="customTitle"
+      :maxlength="SHORT_LABEL_MAX_LENGTH"
       :placeholder="placeholder"
       class="w-full"
     />

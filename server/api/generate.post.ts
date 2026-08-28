@@ -1,4 +1,14 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
+import {
+  FACT_FIELD_MAX_LENGTH,
+  KEYWORD_LIST_MAX_COUNT,
+  KEYWORD_MAX_LENGTH,
+  LONG_CONTENT_MAX_LENGTH,
+  PURCHASE_LINK_BLOCK_MAX_LENGTH,
+  RULES_TEXT_MAX_LENGTH,
+  SHORT_LABEL_MAX_LENGTH,
+  SHORT_NOTE_MAX_LENGTH
+} from '../../shared/types'
 import type { GenerateRequest, GenerateResponse } from '../../shared/types'
 
 export default defineEventHandler(async (event): Promise<GenerateResponse> => {
@@ -17,6 +27,20 @@ export default defineEventHandler(async (event): Promise<GenerateResponse> => {
   }
   if (!body.topic) {
     throw createError({ statusCode: 400, statusMessage: '글 주제를 선택해주세요.' })
+  }
+
+  assertMaxLength(body.mainKeyword, SHORT_LABEL_MAX_LENGTH, '메인 키워드')
+  assertKeywordList(body.relatedKeywords, KEYWORD_LIST_MAX_COUNT, KEYWORD_MAX_LENGTH, '연관 키워드')
+  assertMaxLength(body.customTitle, SHORT_LABEL_MAX_LENGTH, '제목')
+  assertMaxLength(body.referenceContent, LONG_CONTENT_MAX_LENGTH, '참조할 내용')
+  assertMaxLength(body.bodyTemplate, LONG_CONTENT_MAX_LENGTH, '본문 템플릿')
+  assertMaxLength(body.writingRules, RULES_TEXT_MAX_LENGTH, '작성 규칙')
+  assertMaxLength(body.sponsorDisclosure, SHORT_NOTE_MAX_LENGTH, '대가성 문구')
+  assertMaxLength(body.purchaseLinkBlock, PURCHASE_LINK_BLOCK_MAX_LENGTH, '구매 링크 문구')
+  if (body.businessInfo) {
+    for (const value of Object.values(body.businessInfo)) {
+      assertMaxLength(value, FACT_FIELD_MAX_LENGTH, '업체 및 상품 정보')
+    }
   }
 
   const client = await serverSupabaseClient(event)

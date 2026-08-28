@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { TOPIC_PLACEHOLDERS, type Topic } from '~~/shared/types'
+import { LONG_CONTENT_MAX_LENGTH, TOPIC_PLACEHOLDERS, type Topic } from '~~/shared/types'
 
 const props = defineProps<{ topic: Topic }>()
 const referenceContent = defineModel<string>({ required: true })
 
 const placeholder = computed(() => TOPIC_PLACEHOLDERS[props.topic].referenceContent)
+const charCount = computed(() => referenceContent.value.length)
+const isTooLong = computed(() => charCount.value > LONG_CONTENT_MAX_LENGTH)
 </script>
 
 <template>
@@ -16,8 +18,15 @@ const placeholder = computed(() => TOPIC_PLACEHOLDERS[props.topic].referenceCont
     <UTextarea
       v-model="referenceContent"
       :rows="8"
+      :maxlength="LONG_CONTENT_MAX_LENGTH"
       :placeholder="placeholder"
       class="w-full"
     />
+    <span
+      class="text-xs mt-1 block"
+      :class="isTooLong ? 'text-error' : 'text-muted'"
+    >
+      {{ charCount.toLocaleString() }}자 / 최대 {{ LONG_CONTENT_MAX_LENGTH.toLocaleString() }}자
+    </span>
   </UFormField>
 </template>

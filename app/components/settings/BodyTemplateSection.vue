@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Topic } from '~~/shared/types'
+import { LONG_CONTENT_MAX_LENGTH, type Topic } from '~~/shared/types'
 
 const templates = defineModel<Partial<Record<Topic, string>>>({ required: true })
 
@@ -11,6 +11,7 @@ const currentTemplate = computed<string>({
     templates.value = { ...templates.value, [activeTopic.value]: value }
   }
 })
+const isTooLong = computed(() => currentTemplate.value.length > LONG_CONTENT_MAX_LENGTH)
 </script>
 
 <template>
@@ -26,9 +27,16 @@ const currentTemplate = computed<string>({
       <UTextarea
         v-model="currentTemplate"
         :rows="30"
+        :maxlength="LONG_CONTENT_MAX_LENGTH"
         placeholder="예: [도입-방문 계기] 요즘 OO을 찾다가 발견한 곳... / [소제목-메뉴 소개] ... / [소제목-분위기/방문 후기] ... / [마무리-총평]"
         class="w-full font-mono text-sm"
       />
+      <span
+        class="text-xs mt-1 block"
+        :class="isTooLong ? 'text-error' : 'text-gray-500'"
+      >
+        {{ currentTemplate.length.toLocaleString() }}자 / 최대 {{ LONG_CONTENT_MAX_LENGTH.toLocaleString() }}자
+      </span>
     </UFormField>
   </div>
 </template>

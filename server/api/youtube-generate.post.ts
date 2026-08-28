@@ -1,5 +1,5 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
-import { YOUTUBE_TITLE_COUNT_OPTIONS } from '../../shared/types'
+import { KEYWORD_LIST_MAX_COUNT, KEYWORD_MAX_LENGTH, LONG_CONTENT_MAX_LENGTH, SHORT_LABEL_MAX_LENGTH, YOUTUBE_TITLE_COUNT_OPTIONS } from '../../shared/types'
 import type { YoutubeGenerationRequest, YoutubeGenerationResult } from '../../shared/types'
 
 export default defineEventHandler(async (event): Promise<YoutubeGenerationResult> => {
@@ -17,6 +17,10 @@ export default defineEventHandler(async (event): Promise<YoutubeGenerationResult
   if (!body?.videoType || !body.titleStyle || !body.language || !YOUTUBE_TITLE_COUNT_OPTIONS.includes(body.titleCount as never)) {
     throw createError({ statusCode: 400, statusMessage: '영상 유형, 제목 스타일, 제목 개수, 언어를 모두 선택해주세요.' })
   }
+
+  assertMaxLength(content, LONG_CONTENT_MAX_LENGTH, '영상 정보')
+  assertKeywordList(body.keywords, KEYWORD_LIST_MAX_COUNT, KEYWORD_MAX_LENGTH, '검색 키워드 힌트')
+  assertKeywordList(body.previousTitles, KEYWORD_LIST_MAX_COUNT, SHORT_LABEL_MAX_LENGTH, '이전 생성 제목')
 
   const client = await serverSupabaseClient(event)
   const { data: apiKey } = await client.rpc('get_decrypted_api_key', {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { TOPIC_BUSINESS_FIELDS, type BusinessInfo, type NaverBusinessCandidate, type Topic } from '~~/shared/types'
+import { FACT_FIELD_MAX_LENGTH, TOPIC_BUSINESS_FIELDS, type BusinessInfo, type NaverBusinessCandidate, type Topic } from '~~/shared/types'
 
 const props = defineProps<{
   topic: Topic
@@ -68,6 +68,7 @@ function applyCandidate(candidate: NaverBusinessCandidate) {
           v-if="field.type === 'textarea'"
           :model-value="textValue(field.key)"
           :rows="2"
+          :maxlength="FACT_FIELD_MAX_LENGTH"
           :placeholder="field.placeholder"
           class="w-full"
           @update:model-value="(value) => setValue(field.key, value)"
@@ -75,6 +76,7 @@ function applyCandidate(candidate: NaverBusinessCandidate) {
         <UInput
           v-else
           :model-value="textValue(field.key)"
+          :maxlength="FACT_FIELD_MAX_LENGTH"
           :placeholder="field.placeholder"
           class="w-full"
           @update:model-value="(value) => setValue(field.key, value)"

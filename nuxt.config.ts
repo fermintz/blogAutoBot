@@ -6,15 +6,15 @@ export default defineNuxtConfig({
     '@nuxtjs/supabase'
   ],
 
+  components: [
+    { path: '~/components', pathPrefix: false }
+  ],
+
   devtools: {
     enabled: true
   },
 
   css: ['~/assets/css/main.css'],
-
-  components: [
-    { path: '~/components', pathPrefix: false }
-  ],
 
   runtimeConfig: {
     apiKeyEncryptionSecret: '',

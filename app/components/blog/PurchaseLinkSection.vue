@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { SHORT_LABEL_MAX_LENGTH, URL_MAX_LENGTH } from '~~/shared/types'
+
 const props = defineProps<{
   bridgeUrlTemplate: string
 }>()
@@ -37,11 +39,13 @@ async function copyConverted() {
     <template v-else>
       <UInput
         v-model="originalUrl"
+        :maxlength="URL_MAX_LENGTH"
         placeholder="쿠팡파트너스 원본 링크를 붙여넣으세요"
         class="w-full"
       />
       <UInput
         v-model="label"
+        :maxlength="SHORT_LABEL_MAX_LENGTH"
         placeholder="링크 앞에 붙일 문구 (예: 지금 구매하러 가기 👉)"
         class="w-full"
       />

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { INSTAGRAM_SEARCHABLE_TOPICS, INSTAGRAM_STORE_FIELDS, INSTAGRAM_STORE_NAME_LABEL, type InstagramTopic, type NaverBusinessCandidate, type StoreInfo } from '~~/shared/types'
+import { FACT_FIELD_MAX_LENGTH, INSTAGRAM_SEARCHABLE_TOPICS, INSTAGRAM_STORE_FIELDS, INSTAGRAM_STORE_NAME_LABEL, SHORT_LABEL_MAX_LENGTH, type InstagramTopic, type NaverBusinessCandidate, type StoreInfo } from '~~/shared/types'
 
 const props = defineProps<{
   topic: InstagramTopic
@@ -73,6 +73,7 @@ function applyCandidate(candidate: NaverBusinessCandidate) {
     >
       <UInput
         :model-value="info.name"
+        :maxlength="SHORT_LABEL_MAX_LENGTH"
         :placeholder="NAME_PLACEHOLDER[topic]"
         class="w-full"
         @update:model-value="(value) => setValue('name', String(value))"
@@ -110,6 +111,7 @@ function applyCandidate(candidate: NaverBusinessCandidate) {
     >
       <UInput
         :model-value="info.address"
+        :maxlength="FACT_FIELD_MAX_LENGTH"
         :placeholder="addressField.placeholder"
         class="w-full"
         @update:model-value="(value) => setValue('address', value ? String(value) : undefined)"
@@ -125,6 +127,7 @@ function applyCandidate(candidate: NaverBusinessCandidate) {
       >
         <UInput
           :model-value="info[field.key]"
+          :maxlength="FACT_FIELD_MAX_LENGTH"
           :placeholder="field.placeholder"
           class="w-full"
           @update:model-value="(value) => setValue(field.key, value ? String(value) : undefined)"

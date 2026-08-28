@@ -1,6 +1,8 @@
 import type { NaverBusinessCandidate } from '../../shared/types'
 
 const NAVER_LOCAL_SEARCH_ENDPOINT = 'https://openapi.naver.com/v1/search/local.json'
+/** 업체명 자동완성용 단순 검색 API라 Gemini 생성 요청보다 훨씬 짧게 잡는다. */
+const NAVER_SEARCH_TIMEOUT_MS = 8_000
 
 interface NaverLocalItem {
   title?: string
@@ -29,12 +31,12 @@ export async function searchNaverLocal(query: string): Promise<NaverBusinessCand
   }
 
   const url = `${NAVER_LOCAL_SEARCH_ENDPOINT}?${new URLSearchParams({ query, display: '5' })}`
-  const res = await fetch(url, {
+  const res = await fetchWithTimeout(url, {
     headers: {
       'X-Naver-Client-Id': clientId,
       'X-Naver-Client-Secret': clientSecret
     }
-  })
+  }, NAVER_SEARCH_TIMEOUT_MS)
 
   if (!res.ok) {
     const errBody = await res.json().catch(() => null) as NaverErrorBody | null

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { SHORT_NOTE_MAX_LENGTH } from '~~/shared/types'
+
 const sponsorDisclosure = defineModel<string>({ required: true })
 </script>
 
@@ -11,6 +13,7 @@ const sponsorDisclosure = defineModel<string>({ required: true })
     <UTextarea
       v-model="sponsorDisclosure"
       :rows="3"
+      :maxlength="SHORT_NOTE_MAX_LENGTH"
       placeholder="예: 이 포스팅은 업체로부터 소정의 원고료(또는 제품)를 지원받아 작성되었습니다."
       class="w-full"
     />

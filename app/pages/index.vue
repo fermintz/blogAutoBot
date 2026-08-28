@@ -82,7 +82,7 @@ const seoScore = computed(() => {
           <div class="space-y-6">
             <TopicSection v-model="topic" />
             <USeparator />
-            
+
             <KeywordSection
               v-model:main-keyword="mainKeyword"
               v-model:related-keywords-input="relatedKeywordsInput"
@@ -99,7 +99,7 @@ const seoScore = computed(() => {
               :topic="topic"
             />
             <USeparator />
-            
+
             <StyleSection
               v-model:tone="tone"
               v-model:length="length"
@@ -125,8 +125,8 @@ const seoScore = computed(() => {
               size="lg"
               :loading="pending"
               :disabled="!canGenerate"
-              @click="generate"
               class="disabled:bg-gray-400"
+              @click="generate"
             >
               글 생성하기
             </UButton>

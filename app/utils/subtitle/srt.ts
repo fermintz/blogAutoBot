@@ -35,8 +35,15 @@ function isDropFrameCapableFps(fps: number): boolean {
  * 인식할 수 없는 값이면 null을 반환한다.
  */
 export function parseTimecodeToSeconds(raw: string, fps: number): number | null {
-  const value = raw.trim()
+  let value = raw.trim()
   if (!value) return null
+
+  // 일부 스프레드시트/Premiere 내보내기는 콜론이 시간으로 자동 변환되는 걸 막으려고 값을 따옴표로
+  // 한 번 더 감싼다("00:00:00:18" 형태). CSV 파서는 이 따옴표를 필드 값의 일부로 그대로 남기므로 여기서 벗겨낸다.
+  if (value.length >= 2 && value.startsWith('"') && value.endsWith('"')) {
+    value = value.slice(1, -1).trim()
+    if (!value) return null
+  }
 
   if (/^\d+(?:[.,]\d+)?$/.test(value)) {
     return Number(value.replace(',', '.'))

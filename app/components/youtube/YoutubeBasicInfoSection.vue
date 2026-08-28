@@ -1,5 +1,8 @@
 <script setup lang="ts">
+import { LONG_CONTENT_MAX_LENGTH } from '~~/shared/types'
+
 const content = defineModel<string>({ required: true })
+const isTooLong = computed(() => content.value.length > LONG_CONTENT_MAX_LENGTH)
 </script>
 
 <template>
@@ -12,8 +15,15 @@ const content = defineModel<string>({ required: true })
     <UTextarea
       v-model="content"
       :rows="10"
+      :maxlength="LONG_CONTENT_MAX_LENGTH"
       placeholder="예: 4월에 다녀온 오사카 2박3일 여행 브이로그&#10;&#10;쿠로몬시장 장어덮밥&#10;오사카 마루후쿠 커피&#10;낮과 밤의 도톤보리&#10;도톤보리 이자카야 쿠레오루&#10;우메다 공중정원&#10;시아와세노 팬케이크"
       class="w-full"
     />
+    <span
+      class="text-xs mt-1 block"
+      :class="isTooLong ? 'text-error' : 'text-muted'"
+    >
+      {{ content.length.toLocaleString() }}자 / 최대 {{ LONG_CONTENT_MAX_LENGTH.toLocaleString() }}자
+    </span>
   </UFormField>
 </template>

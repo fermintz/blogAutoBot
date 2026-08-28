@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { InstagramTopic } from '~~/shared/types'
+import { LONG_CONTENT_MAX_LENGTH, SHORT_LABEL_MAX_LENGTH, type InstagramTopic } from '~~/shared/types'
 
 const props = defineProps<{
   topic: InstagramTopic
@@ -7,6 +7,7 @@ const props = defineProps<{
 
 const region = defineModel<string>('region', { required: true })
 const reviewNotes = defineModel<string>('reviewNotes', { required: true })
+const isReviewNotesTooLong = computed(() => reviewNotes.value.length > LONG_CONTENT_MAX_LENGTH)
 
 const SECTION_TITLE: Record<InstagramTopic, string> = {
   restaurant: '방문 정보',
@@ -79,6 +80,7 @@ const showRegion = computed(() => props.topic !== 'product')
     >
       <UInput
         v-model="region"
+        :maxlength="SHORT_LABEL_MAX_LENGTH"
         placeholder="예: 광안리 / 민락동"
         class="w-full"
       />
@@ -92,9 +94,16 @@ const showRegion = computed(() => props.topic !== 'product')
       <UTextarea
         v-model="reviewNotes"
         :rows="6"
+        :maxlength="LONG_CONTENT_MAX_LENGTH"
         :placeholder="reviewField.placeholder"
         class="w-full"
       />
+      <span
+        class="text-xs mt-1 block"
+        :class="isReviewNotesTooLong ? 'text-error' : 'text-muted'"
+      >
+        {{ reviewNotes.length.toLocaleString() }}자 / 최대 {{ LONG_CONTENT_MAX_LENGTH.toLocaleString() }}자
+      </span>
     </UFormField>
   </div>
 </template>

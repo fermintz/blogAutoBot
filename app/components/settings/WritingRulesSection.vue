@@ -1,5 +1,8 @@
 <script setup lang="ts">
+import { RULES_TEXT_MAX_LENGTH } from '~~/shared/types'
+
 const writingRules = defineModel<string>({ required: true })
+const isTooLong = computed(() => writingRules.value.length > RULES_TEXT_MAX_LENGTH)
 </script>
 
 <template>
@@ -11,8 +14,15 @@ const writingRules = defineModel<string>({ required: true })
     <UTextarea
       v-model="writingRules"
       :rows="20"
+      :maxlength="RULES_TEXT_MAX_LENGTH"
       placeholder="예: 전문 용어는 풀어서 설명한다 / 특정 브랜드명은 언급하지 않는다 / 문장 끝에 이모지를 쓰지 않는다 / 존댓말을 항상 사용한다"
       class="w-full font-mono text-sm"
     />
+    <span
+      class="text-xs mt-1 block"
+      :class="isTooLong ? 'text-error' : 'text-gray-500'"
+    >
+      {{ writingRules.length.toLocaleString() }}자 / 최대 {{ RULES_TEXT_MAX_LENGTH.toLocaleString() }}자
+    </span>
   </UFormField>
 </template>

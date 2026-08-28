@@ -158,6 +158,24 @@ export interface BusinessLookupResponse {
   candidates: NaverBusinessCandidate[]
 }
 
+/**
+ * 여러 생성 기능이 공통으로 쓰는 자유 텍스트 입력 길이 제한. 필드 성격(한 줄짜리 값 vs 여러 문단짜리 서술형 값)에 따라
+ * 다른 상수를 골라 쓴다. 클라이언트 입력 UI와 서버 API 검증이 이 상수를 함께 참조해 값이 어긋나지 않게 한다.
+ */
+export const SHORT_LABEL_MAX_LENGTH = 200 // 제목/업체명/구매 링크 CTA 문구처럼 한 줄짜리 값
+export const FACT_FIELD_MAX_LENGTH = 1000 // 업체·매장 정보 값 한 개(주소, 영업시간 등)처럼 한두 문장짜리 사실 정보
+export const SHORT_NOTE_MAX_LENGTH = 500 // 대가성 문구처럼 짧은 부가 문구
+export const RULES_TEXT_MAX_LENGTH = 3000 // 작성 규칙처럼 여러 줄의 지시문
+export const LONG_CONTENT_MAX_LENGTH = 8000 // 참고 내용/본문 템플릿/영상 정보/리뷰 메모처럼 여러 문단짜리 핵심 재료
+export const URL_MAX_LENGTH = 2000 // 제휴 링크 원본 URL
+
+/** 연관 키워드/검색 키워드 힌트처럼 여러 개를 입력받는 배열형 입력의 개수·개별 길이 제한. */
+export const KEYWORD_LIST_MAX_COUNT = 30
+export const KEYWORD_MAX_LENGTH = 50
+
+/** 라벨 문구 + URL 인코딩된 원본 링크가 합쳐진 값이라 다른 짧은 문구보다 여유 있게 잡는다. */
+export const PURCHASE_LINK_BLOCK_MAX_LENGTH = 3000
+
 export interface GenerateRequest {
   topic: Topic
   mainKeyword: string
@@ -660,3 +678,14 @@ export const SUBTITLE_BATCH_SIZE = 40
 export const SUBTITLE_CONTEXT_WINDOW = 3
 /** 배치 번역 요청을 동시에 몇 개까지 보낼지. 사용자 개인 Gemini API 키의 무료 등급 분당 요청 한도를 넘기지 않도록 보수적으로 잡는다. */
 export const SUBTITLE_BATCH_CONCURRENCY = 3
+
+/**
+ * /api/subtitle/translate 서버 검증용 상한. 정상적인 요청은 chunker.ts가 SUBTITLE_BATCH_SIZE(40)+문맥
+ * 최대 6개(앞뒤 SUBTITLE_CONTEXT_WINDOW 3개씩)로 나눠 보내므로, 클라이언트를 우회해 items/문맥을 직접
+ * 부풀리는 요청만 막도록 정상 배치보다 여유 있게 잡는다. 자막 줄 하나·전체 텍스트 총량에도 별도 상한을 둬
+ * 개수를 잘게 쪼개 총 글자수만 키우는 우회도 막는다.
+ */
+export const SUBTITLE_TRANSLATE_MAX_ITEMS = 100
+export const SUBTITLE_TRANSLATE_MAX_CONTEXT_ITEMS = 20
+export const SUBTITLE_TRANSLATE_MAX_TEXT_LENGTH_PER_ITEM = 2000
+export const SUBTITLE_TRANSLATE_MAX_TOTAL_TEXT_LENGTH = 50000

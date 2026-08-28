@@ -17,7 +17,6 @@ export interface Database {
           writing_rules: string
           tone: string
           length: string
-          footer_text: string
           updated_at: string
         }
         Insert: {
@@ -29,7 +28,6 @@ export interface Database {
           writing_rules?: string
           tone?: string
           length?: string
-          footer_text?: string
           updated_at?: string
         }
         Update: {
@@ -41,7 +39,6 @@ export interface Database {
           writing_rules?: string
           tone?: string
           length?: string
-          footer_text?: string
           updated_at?: string
         }
         Relationships: []

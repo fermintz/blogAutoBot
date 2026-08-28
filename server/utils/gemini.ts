@@ -3,6 +3,11 @@ import type { InstagramCaptionResult, ReelsCaption, ReelsScriptResult, ReelsScri
 const GEMINI_MODEL = 'gemini-3.6-flash'
 const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`
 
+/** 글/대본 등 실제 콘텐츠 생성은 응답 시간이 길어질 수 있어 여유 있게 잡는다. */
+const GEMINI_GENERATE_TIMEOUT_MS = 60_000
+/** 키 검증은 모델 목록만 조회하는 가벼운 호출이라 짧게 잡아, 유효하지 않은 키로 오래 붙잡히지 않게 한다. */
+const GEMINI_VALIDATE_TIMEOUT_MS = 10_000
+
 const BLOG_RESPONSE_SCHEMA = {
   type: 'OBJECT',
   properties: {
@@ -97,7 +102,7 @@ interface GeminiErrorBody {
 
 /** fetch → 에러 매핑 → JSON 파싱까지만 담당하는 공용 저수준 호출. 필드별 필수값 검증은 각 호출부가 한다. */
 async function callGeminiJson<T>(apiKey: string, systemPrompt: string, userPrompt: string, schema: object, temperature = 1): Promise<T> {
-  const res = await fetch(`${GEMINI_ENDPOINT}?key=${encodeURIComponent(apiKey)}`, {
+  const res = await fetchWithTimeout(`${GEMINI_ENDPOINT}?key=${encodeURIComponent(apiKey)}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -109,7 +114,7 @@ async function callGeminiJson<T>(apiKey: string, systemPrompt: string, userPromp
         temperature
       }
     })
-  })
+  }, GEMINI_GENERATE_TIMEOUT_MS)
 
   if (!res.ok) {
     const errBody = await res.json().catch(() => null) as GeminiErrorBody | null
@@ -256,7 +261,11 @@ export async function callGeminiSubtitleTranslate(apiKey: string, systemPrompt: 
 }
 
 export async function validateGeminiKey(apiKey: string): Promise<void> {
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?pageSize=1&key=${encodeURIComponent(apiKey)}`)
+  const res = await fetchWithTimeout(
+    `https://generativelanguage.googleapis.com/v1beta/models?pageSize=1&key=${encodeURIComponent(apiKey)}`,
+    {},
+    GEMINI_VALIDATE_TIMEOUT_MS
+  )
 
   if (!res.ok) {
     const errBody = await res.json().catch(() => null) as GeminiErrorBody | null
