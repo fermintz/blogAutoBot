@@ -11,7 +11,7 @@ function timeRange(entry: SubtitleCsvEntry) {
   const start = props.startColumn ? entry.row[props.startColumn] : undefined
   const end = props.endColumn ? entry.row[props.endColumn] : undefined
   if (!start && !end) return null
-  return `${start ?? '?'} → ${end ?? '?'}`
+  return `${start ?? '?'} ~ ${end ?? '?'}`
 }
 </script>
 
@@ -39,20 +39,14 @@ function timeRange(entry: SubtitleCsvEntry) {
       <div
         v-for="entry in entries"
         :key="entry.rowIndex"
-        class="py-2 flex items-start gap-3 text-sm"
+        class="py-2 text-sm space-y-0.5"
       >
-        <span class="text-xs text-muted font-mono shrink-0 pt-0.5">#{{ entry.rowIndex + 1 }}</span>
-        <div class="flex-1 space-y-0.5">
-          <p
-            v-if="timeRange(entry)"
-            class="text-xs text-muted font-mono"
-          >
-            {{ timeRange(entry) }}
-          </p>
-          <p class="whitespace-pre-wrap">
-            {{ entry.sourceText }}
-          </p>
-        </div>
+        <p class="text-xs text-muted font-mono">
+          #{{ entry.rowIndex + 1 }}<template v-if="timeRange(entry)">  {{ timeRange(entry) }}</template>
+        </p>
+        <p class="whitespace-pre-wrap">
+          {{ entry.sourceText }}
+        </p>
       </div>
     </div>
   </UCard>
