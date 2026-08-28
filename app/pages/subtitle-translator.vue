@@ -171,6 +171,8 @@ const {
         <SubtitlePreview
           v-else-if="parseStatus === 'ready' && !isTranslating"
           :entries="entries"
+          :start-column="startColumn"
+          :end-column="endColumn"
         />
 
         <UCard

@@ -1,9 +1,18 @@
 <script setup lang="ts">
 import type { SubtitleCsvEntry } from '~~/shared/types'
 
-defineProps<{
+const props = defineProps<{
   entries: SubtitleCsvEntry[]
+  startColumn: string | null
+  endColumn: string | null
 }>()
+
+function timeRange(entry: SubtitleCsvEntry) {
+  const start = props.startColumn ? entry.row[props.startColumn] : undefined
+  const end = props.endColumn ? entry.row[props.endColumn] : undefined
+  if (!start && !end) return null
+  return `${start ?? '?'} → ${end ?? '?'}`
+}
 </script>
 
 <template>
@@ -33,7 +42,17 @@ defineProps<{
         class="py-2 flex items-start gap-3 text-sm"
       >
         <span class="text-xs text-muted font-mono shrink-0 pt-0.5">#{{ entry.rowIndex + 1 }}</span>
-        <span class="whitespace-pre-wrap flex-1">{{ entry.sourceText }}</span>
+        <div class="flex-1 space-y-0.5">
+          <p
+            v-if="timeRange(entry)"
+            class="text-xs text-muted font-mono"
+          >
+            {{ timeRange(entry) }}
+          </p>
+          <p class="whitespace-pre-wrap">
+            {{ entry.sourceText }}
+          </p>
+        </div>
       </div>
     </div>
   </UCard>
