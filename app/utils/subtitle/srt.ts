@@ -109,3 +109,10 @@ export function buildSrtDownloadFilename(originalFilename: string, targetLanguag
   const base = dot > 0 ? originalFilename.slice(0, dot) : originalFilename
   return `${base}_${targetLanguageLabel}.srt`
 }
+
+/** 번역 없이 원문 그대로 SRT로 변환할 때 쓰는 "원본파일명.srt" 형태의 다운로드 파일명을 만든다. */
+export function buildSourceSrtDownloadFilename(originalFilename: string): string {
+  const dot = originalFilename.lastIndexOf('.')
+  const base = dot > 0 ? originalFilename.slice(0, dot) : originalFilename
+  return `${base}.srt`
+}

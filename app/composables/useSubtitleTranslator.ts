@@ -19,8 +19,8 @@ import type {
 } from '~~/shared/types'
 import { detectSourceColumn, detectTimeColumns, parseCsvText, readCsvFile } from '../utils/subtitle/parser'
 import { wrapSubtitleText } from '../utils/subtitle/formatter'
-import { buildSrtDownloadFilename, buildSrtFromEntries } from '../utils/subtitle/srt'
-import { validateFinalSubtitles } from '../utils/subtitle/validator'
+import { buildSourceSrtDownloadFilename, buildSrtDownloadFilename, buildSrtFromEntries } from '../utils/subtitle/srt'
+import { validateFinalSubtitles, validateTimeColumns } from '../utils/subtitle/validator'
 import { chunkEntriesForTranslation } from '../utils/subtitle/chunker'
 import { runWithConcurrency } from '../utils/subtitle/concurrency'
 import type { SubtitleBatch } from '../utils/subtitle/chunker'
@@ -89,6 +89,14 @@ export function useSubtitleTranslator() {
     validateFinalSubtitles(entries.value, originalRowCount.value, startColumn.value, endColumn.value, fps.value)
   )
   const isDownloadReady = computed(() => hasAnyTranslation.value && validationIssues.value.every(i => i.level !== 'error'))
+
+  /** 번역 없이 CSV의 시간/원문 컬럼만으로 SRT를 만들 수 있는 상태인지. 번역 여부는 상관없다. */
+  const canDownloadSourceSrt = computed(() =>
+    parseStatus.value === 'ready' && entries.value.length > 0 && !!startColumn.value && !!endColumn.value
+  )
+  const sourceValidationIssues = computed<SubtitleValidationIssue[]>(() =>
+    validateTimeColumns(entries.value, startColumn.value, endColumn.value, fps.value)
+  )
 
   const targetLanguageLabel = computed(() =>
     SUBTITLE_TARGET_LANGUAGE_OPTIONS.find(o => o.value === targetLanguage.value)?.label ?? targetLanguage.value
@@ -334,18 +342,30 @@ export function useSubtitleTranslator() {
     if (batch) syncBatchFailureState(batch)
   }
 
-  function downloadSrt() {
-    if (!isDownloadReady.value || !startColumn.value || !endColumn.value) return
-    const srtText = buildSrtFromEntries(entries.value, startColumn.value, endColumn.value, fps.value)
+  function triggerSrtDownload(srtText: string, downloadFilename: string) {
     const blob = new Blob([srtText], { type: 'text/plain;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const anchor = document.createElement('a')
     anchor.href = url
-    anchor.download = buildSrtDownloadFilename(fileName.value || 'subtitle.srt', targetLanguageLabel.value)
+    anchor.download = downloadFilename
     document.body.appendChild(anchor)
     anchor.click()
     anchor.remove()
     URL.revokeObjectURL(url)
+  }
+
+  function downloadSrt() {
+    if (!isDownloadReady.value || !startColumn.value || !endColumn.value) return
+    const srtText = buildSrtFromEntries(entries.value, startColumn.value, endColumn.value, fps.value)
+    triggerSrtDownload(srtText, buildSrtDownloadFilename(fileName.value || 'subtitle.srt', targetLanguageLabel.value))
+  }
+
+  /** 번역 없이 CSV의 원문 텍스트와 시간 컬럼만으로 SRT 파일을 바로 만들어 내려받는다. */
+  function downloadSourceSrt() {
+    if (!canDownloadSourceSrt.value || !startColumn.value || !endColumn.value) return
+    if (sourceValidationIssues.value.some(i => i.level === 'error')) return
+    const srtText = buildSrtFromEntries(entries.value, startColumn.value, endColumn.value, fps.value)
+    triggerSrtDownload(srtText, buildSourceSrtDownloadFilename(fileName.value || 'subtitle.srt'))
   }
 
   return {
@@ -380,6 +400,8 @@ export function useSubtitleTranslator() {
     canTranslate,
     validationIssues,
     isDownloadReady,
+    canDownloadSourceSrt,
+    sourceValidationIssues,
     retranslatingIndex,
     loadFile,
     selectSourceColumn,
@@ -391,6 +413,7 @@ export function useSubtitleTranslator() {
     retranslateOne,
     retranslateAll,
     updateTranslatedText,
-    downloadSrt
+    downloadSrt,
+    downloadSourceSrt
   }
 }

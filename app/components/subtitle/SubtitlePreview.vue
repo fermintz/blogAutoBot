@@ -7,11 +7,12 @@ const props = defineProps<{
   endColumn: string | null
 }>()
 
-function timeRange(entry: SubtitleCsvEntry) {
+function entryLabel(entry: SubtitleCsvEntry) {
   const start = props.startColumn ? entry.row[props.startColumn] : undefined
   const end = props.endColumn ? entry.row[props.endColumn] : undefined
-  if (!start && !end) return null
-  return `${start ?? '?'} ~ ${end ?? '?'}`
+  const label = `#${entry.rowIndex + 1}`
+  if (!start && !end) return label
+  return `${label}  ${start ?? '?'} ~ ${end ?? '?'}`
 }
 </script>
 
@@ -42,7 +43,7 @@ function timeRange(entry: SubtitleCsvEntry) {
         class="py-2 text-sm space-y-0.5"
       >
         <p class="text-xs text-muted font-mono">
-          #{{ entry.rowIndex + 1 }}<template v-if="timeRange(entry)">  {{ timeRange(entry) }}</template>
+          {{ entryLabel(entry) }}
         </p>
         <p class="whitespace-pre-wrap">
           {{ entry.sourceText }}

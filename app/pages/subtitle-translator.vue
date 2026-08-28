@@ -30,6 +30,8 @@ const {
   canTranslate,
   validationIssues,
   isDownloadReady,
+  canDownloadSourceSrt,
+  sourceValidationIssues,
   retranslatingIndex,
   loadFile,
   selectSourceColumn,
@@ -41,8 +43,20 @@ const {
   retranslateOne,
   retranslateAll,
   updateTranslatedText,
-  downloadSrt
+  downloadSrt,
+  downloadSourceSrt
 } = useSubtitleTranslator()
+
+const toast = useToast()
+
+function handleDownloadSourceSrt() {
+  const firstError = sourceValidationIssues.value.find(i => i.level === 'error')
+  if (firstError) {
+    toast.add({ title: 'SRT 변환 불가', description: firstError.message, icon: 'i-lucide-circle-x', color: 'error' })
+    return
+  }
+  downloadSourceSrt()
+}
 </script>
 
 <template>
@@ -112,16 +126,29 @@ const {
             v-if="parseStatus === 'ready'"
             #footer
           >
-            <UButton
-              block
-              size="lg"
-              icon="i-lucide-languages"
-              :loading="isTranslating"
-              :disabled="!canTranslate"
-              @click="startTranslate"
-            >
-              번역 시작
-            </UButton>
+            <div class="space-y-2">
+              <UButton
+                block
+                size="lg"
+                icon="i-lucide-languages"
+                :loading="isTranslating"
+                :disabled="!canTranslate"
+                @click="startTranslate"
+              >
+                번역 시작
+              </UButton>
+              <UButton
+                block
+                size="lg"
+                color="neutral"
+                variant="subtle"
+                icon="i-lucide-file-down"
+                :disabled="!canDownloadSourceSrt || isTranslating"
+                @click="handleDownloadSourceSrt"
+              >
+                번역 없이 SRT로 변환
+              </UButton>
+            </div>
           </template>
         </UCard>
       </div>

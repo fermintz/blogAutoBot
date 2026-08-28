@@ -30,6 +30,21 @@ export function validateFinalSubtitles(
     }
   }
 
+  return [...issues, ...validateTimeColumns(entries, startColumn, endColumn, fps)]
+}
+
+/**
+ * 시작/종료 시간 컬럼만 검증한다. 번역 여부와 무관하게(번역 없이 SRT로 변환할 때도) 재사용하기 위해
+ * validateFinalSubtitles에서 시간 관련 검사만 분리한 것이다.
+ */
+export function validateTimeColumns(
+  entries: SubtitleCsvEntry[],
+  startColumn: string | null,
+  endColumn: string | null,
+  fps: number
+): SubtitleValidationIssue[] {
+  const issues: SubtitleValidationIssue[] = []
+
   if (!startColumn || !endColumn) {
     issues.push({ level: 'error', message: 'SRT로 내보내려면 시작/종료 시간 컬럼을 선택해주세요.' })
     return issues
