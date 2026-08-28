@@ -47,15 +47,6 @@ const {
 
 <template>
   <UContainer class="py-8 max-w-none">
-    <div class="mb-6">
-      <h1 class="text-2xl font-bold">
-        CSV 자막 번역기
-      </h1>
-      <p class="text-muted mt-1">
-        CSV 자막 파일을 업로드하고 영상에 자연스러운 자막으로 번역해보세요.
-      </p>
-    </div>
-
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
       <div class="lg:col-span-5 space-y-6">
         <UCard>
