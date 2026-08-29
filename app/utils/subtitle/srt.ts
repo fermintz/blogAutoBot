@@ -97,6 +97,20 @@ export function formatSrtTimestamp(totalSeconds: number): string {
 }
 
 /**
+ * SRT 큐(자막 블록) 텍스트를 정규화한다. SRT 포맷에서 빈 줄은 큐의 끝을 의미하므로, CSV 셀에 섞여 들어온
+ * CRLF/CR(엑셀·프리미어의 멀티라인 셀 내보내기에서 흔함)이나 셀 내부의 빈 줄을 그대로 두면 그 지점에서
+ * 파서(YouTube 등)가 큐가 끝난 것으로 오인해 이후 모든 큐의 인덱스/타임코드가 한 칸씩 밀려버린다.
+ * 모든 개행을 LF로 통일하고 빈 줄을 제거해 큐 하나가 항상 하나의 블록으로만 인식되도록 만든다.
+ */
+function sanitizeCueText(text: string): string {
+  return text
+    .split(/\r\n|\r|\n/)
+    .map(line => line.trim())
+    .filter(line => line.length > 0)
+    .join('\n')
+}
+
+/**
  * 번역이 끝난 자막 항목들을 SRT 본문 문자열로 조립한다.
  * 시작/종료 컬럼 값은 다운로드 전 validateFinalSubtitles로 이미 파싱 가능함이 검증된 상태를 가정한다.
  */
@@ -104,7 +118,7 @@ export function buildSrtFromEntries(entries: SubtitleCsvEntry[], startColumn: st
   const blocks = entries.map((entry, index) => {
     const start = parseTimecodeToSeconds(entry.row[startColumn] ?? '', fps) ?? 0
     const end = parseTimecodeToSeconds(entry.row[endColumn] ?? '', fps) ?? 0
-    const text = entry.translatedText ?? entry.sourceText
+    const text = sanitizeCueText(entry.translatedText ?? entry.sourceText)
     return `${index + 1}\n${formatSrtTimestamp(start)} --> ${formatSrtTimestamp(end)}\n${text}`
   })
   return `${blocks.join('\n\n')}\n`
