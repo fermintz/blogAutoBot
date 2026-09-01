@@ -14,6 +14,14 @@ const {
   purchaseLinkLabel,
   sponsorDisclosure,
   bridgeUrlTemplate,
+  photos,
+  photoBusy,
+  hasFailedPhotos,
+  photoBatchErrorMessage,
+  photoRejectedFileMessage,
+  addPhotoFiles,
+  removePhoto,
+  retryPhoto,
   result,
   lastRequest,
   pending,
@@ -105,6 +113,17 @@ const seoScore = computed(() => {
               v-model:length="length"
             />
             <USeparator />
+            <PhotoSection
+              :photos="photos"
+              :photo-busy="photoBusy"
+              :has-failed-photos="hasFailedPhotos"
+              :batch-error-message="photoBatchErrorMessage"
+              :rejected-file-message="photoRejectedFileMessage"
+              :add-files="addPhotoFiles"
+              :remove-photo="removePhoto"
+              :retry-photo="retryPhoto"
+            />
+            <USeparator />
             <BusinessInfoSection
               v-model="businessInfo"
               :topic="topic"
@@ -151,7 +170,12 @@ const seoScore = computed(() => {
             v-if="seoScore"
             :score="seoScore"
           />
-          <ResultPanel :result="result" />
+          <ResultPanel
+            :result="result"
+            show-regenerate
+            :regenerating="pending"
+            @regenerate="generate"
+          />
         </template>
 
         <UCard

@@ -16,7 +16,8 @@
     "@nuxtjs/supabase": "^2.0.10",
     "nuxt": "^4.5.2",
     "papaparse": "^5.7.0",
-    "tailwindcss": "^4.3.3"
+    "tailwindcss": "^4.3.3",
+    "vuedraggable": "^4.1.0"
   },
   "devDependencies": {
     "@nuxt/eslint": "^1.17.0",

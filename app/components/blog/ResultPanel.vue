@@ -3,6 +3,12 @@ import type { GenerateResponse } from '~~/shared/types'
 
 const props = defineProps<{
   result: GenerateResponse
+  showRegenerate?: boolean
+  regenerating?: boolean
+}>()
+
+const emit = defineEmits<{
+  regenerate: []
 }>()
 
 const toast = useToast()
@@ -74,15 +80,29 @@ async function copy(text: string, label: string) {
             전체 {{ totalCharCount.toLocaleString() }}자 (제목 {{ titleCharCount }} · 본문 {{ bodyCharCount.toLocaleString() }})
           </UBadge>
         </div>
-        <UButton
-          icon="i-lucide-copy"
-          size="sm"
-          color="neutral"
-          variant="subtle"
-          @click="copy(fullText, '전체 글')"
-        >
-          전체 복사
-        </UButton>
+        <div class="flex items-center gap-2">
+          <UButton
+            v-if="showRegenerate"
+            icon="i-lucide-refresh-cw"
+            size="sm"
+            color="neutral"
+            variant="subtle"
+            :loading="regenerating"
+            :disabled="regenerating"
+            @click="emit('regenerate')"
+          >
+            재생성
+          </UButton>
+          <UButton
+            icon="i-lucide-copy"
+            size="sm"
+            color="neutral"
+            variant="subtle"
+            @click="copy(fullText, '전체 글')"
+          >
+            전체 복사
+          </UButton>
+        </div>
       </div>
     </template>
 

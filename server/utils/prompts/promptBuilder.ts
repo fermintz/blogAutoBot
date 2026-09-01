@@ -6,9 +6,11 @@ import { buildGeoRule } from './geoRules'
 import { buildEerRule } from './eerRules'
 import { buildStyleRule } from './styleRules'
 import { buildUserCustomRule } from './userRules'
+import { buildPhotoRule } from './photoRules'
 import {
   buildBodyTemplateBlock,
   buildBusinessInfoBlock,
+  buildPhotoAnalysisBlock,
   buildReferenceBlock,
   buildTitleBlock,
   photoPlaceholderCount,
@@ -28,6 +30,14 @@ export interface BlogPrompt {
  * 작성 규칙)뿐이고, 나머지는 모든 요청에 공통으로 적용되는 고정 규칙이다.
  */
 function buildSystemPrompt(req: GenerateRequest): string {
+  const hasPhotos = !!req.photoAnalysis?.length
+  const photoRuleBlock = hasPhotos ? `\n## PHOTO RULE (업로드된 사진 반영 원칙)\n${buildPhotoRule()}\n` : ''
+  const photoChecklistBlock = hasPhotos
+    ? `11. 사진 분석 결과나 사용자 입력에 없는 세부사항을 사진 관련 서술에서 사실처럼 단정하지 않았는가?
+12. 사진 관련 서술이 목표 분량을 채우기 위해 부풀려지지 않았는가?
+13. 유사한 사진을 반복해서 과도하게 강조하지 않았는가?\n`
+    : ''
+
   return `당신은 10년차 네이버 블로그 전업 작가입니다. 실제 사람이 직접 경험하고 쓴 것처럼 자연스러운 블로그 글을 작성합니다.
 
 ## 규칙 우선순위
@@ -62,7 +72,7 @@ ${buildEerRule()}
 
 ## STYLE RULE (문체 및 가독성)
 ${buildStyleRule()}
-
+${photoRuleBlock}
 ## USER CUSTOM RULE
 ${buildUserCustomRule(req.writingRules)}
 
@@ -78,7 +88,7 @@ ${buildUserCustomRule(req.writingRules)}
 8. AI가 콘텐츠의 핵심 주제를 명확하게 이해할 수 있는 구조인가?
 9. 사용자가 추가 검색을 하지 않아도 될 만큼 충분한 정보를 제공하는가?
 10. 사용자 지정 규칙(USER CUSTOM RULE)을 모두 준수했는가?
-
+${photoChecklistBlock}
 ## 출력 형식
 반드시 아래 JSON 스키마에 맞는 JSON만 출력한다 (설명, 코드블록 표시 없이 순수 JSON). 이 형식은 앞선 모든 규칙과 별개로 항상 지켜야 하는 기술적 제약이다.
 - title: 블로그 글 제목 (문자열)
@@ -95,7 +105,7 @@ function buildUserPrompt(req: GenerateRequest): string {
   const topicLabel = TOPIC_OPTIONS.find(t => t.value === req.topic)?.label ?? req.topic
   const relatedKeywords = req.relatedKeywords.filter(k => k.trim().length > 0)
 
-  return `## 작성 대상
+  const base = `## 작성 대상
 - 글 주제 유형: ${topicLabel}
 - 메인 키워드: "${req.mainKeyword}"
 ${relatedKeywords.length > 0 ? `- 연관 키워드(본문 전반에 자연스럽게 분산 배치): ${relatedKeywords.join(', ')}` : ''}
@@ -116,9 +126,13 @@ ${buildBusinessInfoBlock(req.topic, req.businessInfo)}
 
 ## 사진 자리 표시
 - 사진을 넣으면 좋을 위치마다 독립된 줄에 정확히 다음 형식으로 표시한다: [사진: 어떤 사진이 들어가면 좋을지에 대한 짧고 구체적인 설명]
+- 순서가 중요하다: 사진 마커를 먼저 놓고, 그 사진에 대해 이야기하는 문단을 그다음에 배치한다 (사진을 먼저 보여준 뒤 그 사진에 대해 설명하는 흐름). 문단을 먼저 쓰고 그 문단을 요약하듯 뒤에 사진 마커를 붙이지 않는다.
 - 문단이 자연스럽게 끝나는 지점(문단과 문단 사이)에만 넣고, 문장 중간에 넣지 않는다.
 - 목표 분량 기준 ${photoPlaceholderCount(req.length)} 정도를 본문 전체에 고르게 배치한다.
-- 설명은 바로 앞뒤 문단 내용과 실제로 연결되는 구체적인 문구로 쓴다 (예: [사진: 매장 외관과 간판], [사진: 시그니처 메뉴 플레이팅]). 과장하지 않고 간결하게 쓴다.`
+- 설명은 바로 뒤에 이어지는 문단 내용과 실제로 연결되는 구체적인 문구로 쓴다 (예: [사진: 매장 외관과 간판], [사진: 시그니처 메뉴 플레이팅]). 과장하지 않고 간결하게 쓴다.`
+
+  const photoBlock = buildPhotoAnalysisBlock(req.photoAnalysis)
+  return photoBlock ? `${base}\n\n## 업로드된 사진 분석 결과\n${photoBlock}` : base
 }
 
 export function buildBlogPrompt(req: GenerateRequest): BlogPrompt {

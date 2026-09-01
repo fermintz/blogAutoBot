@@ -191,12 +191,78 @@ export interface GenerateRequest {
   sponsorDisclosure?: string
   /** 브릿지 서버로 변환된 제휴 링크 CTA 문구(라벨+URL). 완성된 형태로 본문 하단에 그대로 삽입한다. */
   purchaseLinkBlock?: string
+  /** 업로드된 사진을 미리 분석한 결과. 사진을 첨부하지 않으면 undefined이며, 이 경우 프롬프트는 기존과 완전히 동일하다. */
+  photoAnalysis?: PhotoAnalysis[]
 }
 
 export interface GenerateResponse {
   title: string
   body: string
   tags: string[]
+}
+
+/** 업로드된 사진을 분석할 때 구분하는 유형. 실제 사진 내용을 기준으로 판단하며 강제로 제한하지 않는 취지로 'other'를 늘 열어둔다. */
+export const PHOTO_TYPE_OPTIONS = [
+  { value: 'exterior', label: '외관' },
+  { value: 'interior', label: '내부/인테리어' },
+  { value: 'subject', label: '음식/상품/핵심 피사체' },
+  { value: 'text', label: '메뉴판/간판/안내문 등 텍스트 위주' },
+  { value: 'people', label: '인물/활동 장면' },
+  { value: 'scenery', label: '전경/풍경' },
+  { value: 'other', label: '기타' }
+] as const
+export type PhotoType = typeof PHOTO_TYPE_OPTIONS[number]['value']
+
+export const PHOTO_MAX_COUNT = 30
+/** 사진 1장 base64 길이 상한(대략 디코딩 시 300KB). 클라이언트 최적화 목표보다 넉넉해 정상 사진을 막지 않으면서, 우회 시도만 걸러낸다. */
+export const PHOTO_MAX_BASE64_LENGTH = 400_000
+/** 한 번의 /api/photo-analyze 요청 전체 base64 합계 상한. 서버리스 플랫폼(Vercel 등)의 요청 바디 한도(약 4.5MB) 대비 안전마진을 둔다. */
+export const PHOTO_ANALYZE_TOTAL_BASE64_LENGTH = 4_500_000
+/** 클라이언트가 한 번의 /api/photo-analyze 호출에 담는 최대 사진 수. PHOTO_MAX_COUNT(30장)까지 업로드해도 요청 바디가
+ * 서버리스 요청 크기 한도를 넘지 않도록, 분석은 이 크기 단위로 나눠서 호출한다(유사 사진 그룹핑은 같은 호출 안에서만
+ * 비교되므로, 자연스럽게 근처 순서에 있는 사진끼리 비교된다). */
+export const PHOTO_ANALYZE_BATCH_SIZE = 10
+/** description/observableFacts 등 사진 분석 결과 텍스트 필드 1개의 서버 측 검증 상한. */
+export const PHOTO_TEXT_FIELD_MAX_LENGTH = 500
+
+export interface PhotoAnalyzeRequestImage {
+  mimeType: 'image/jpeg' | 'image/webp'
+  /** data URL 접두어(data:image/...;base64,) 없는 순수 base64 문자열. */
+  base64: string
+}
+
+export interface PhotoAnalyzeRequest {
+  topic: Topic
+  images: PhotoAnalyzeRequestImage[]
+}
+
+/** Gemini가 입력 이미지와 동일한 순서로 반환하는 원시 분석 결과 1건. id 없이 배열 위치로 매칭한다. */
+export interface PhotoAnalyzeResultItem {
+  type: PhotoType
+  description: string
+  observableFacts: string[]
+  visibleText: string[]
+  possibleTopics: string[]
+  importance: 'primary' | 'secondary'
+  /** 이 API 호출(배치) 안에서만 유효한 유사 사진 그룹 번호. 여러 번에 나눠 분석하면 배치마다 새로 매겨진다. */
+  similarityGroup: number
+  suggestedCaption: string
+}
+
+export interface PhotoAnalyzeResponse {
+  /** 요청 images와 배열 길이·순서가 항상 1:1로 대응한다. */
+  results: PhotoAnalyzeResultItem[]
+}
+
+/**
+ * /api/generate로 보낼 최종 형태. similarityGroup(숫자, 배치 호출 스코프)을 클라이언트가 배치 단위 문자열로
+ * 네임스페이싱한 similarityGroupId로 바꿔, 여러 번에 나눠 분석해도 서로 다른 배치의 그룹 번호가 우연히 겹쳐
+ * 무관한 사진이 "닮은 사진"으로 잘못 묶이지 않게 한다.
+ */
+export interface PhotoAnalysis extends Omit<PhotoAnalyzeResultItem, 'similarityGroup'> {
+  /** 사용자가 지정한 실제 배치 순서(0-based). AI가 임의로 바꾸지 않는다. */
+  order: number
+  similarityGroupId: string
 }
 
 export interface SavedArticle {

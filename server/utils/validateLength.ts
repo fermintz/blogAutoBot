@@ -26,3 +26,44 @@ export function assertKeywordList(list: string[] | undefined, maxCount: number, 
     assertMaxLength(item, maxItemLength, `${fieldLabel} 항목`)
   }
 }
+
+interface PhotoBatchImage {
+  mimeType?: string
+  base64?: string
+}
+
+/**
+ * /api/photo-analyze에 들어온 사진 배치의 개수/형식/용량을 검증한다. 클라이언트 최적화가 항상 image/jpeg 또는
+ * image/webp만 만들어내므로, 그 외 mimeType은 클라이언트 검증을 우회한 시도로 간주해 거부한다.
+ */
+export function assertPhotoBatch(
+  images: PhotoBatchImage[] | undefined,
+  maxCount: number,
+  maxItemBase64Length: number,
+  maxTotalBase64Length: number
+): void {
+  if (!images || images.length === 0) {
+    throw createError({ statusCode: 400, statusMessage: '분석할 사진을 1장 이상 보내주세요.' })
+  }
+  if (images.length > maxCount) {
+    throw createError({ statusCode: 400, statusMessage: `사진은 최대 ${maxCount}장까지 분석할 수 있습니다. (현재 ${images.length}장)` })
+  }
+
+  let total = 0
+  for (const image of images) {
+    if (image.mimeType !== 'image/jpeg' && image.mimeType !== 'image/webp') {
+      throw createError({ statusCode: 400, statusMessage: '지원하지 않는 사진 형식입니다.' })
+    }
+    if (!image.base64 || image.base64.length === 0) {
+      throw createError({ statusCode: 400, statusMessage: '사진 데이터가 비어 있습니다.' })
+    }
+    if (image.base64.length > maxItemBase64Length) {
+      throw createError({ statusCode: 400, statusMessage: '사진 용량이 너무 큽니다. 다시 시도해주세요.' })
+    }
+    total += image.base64.length
+  }
+
+  if (total > maxTotalBase64Length) {
+    throw createError({ statusCode: 400, statusMessage: '사진 전체 용량이 너무 큽니다. 사진 수를 줄이거나 나눠서 시도해주세요.' })
+  }
+}

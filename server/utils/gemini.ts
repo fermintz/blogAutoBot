@@ -1,4 +1,4 @@
-import type { InstagramCaptionResult, ReelsCaption, ReelsScriptResult, ReelsScriptSegment, YoutubeGenerationResult } from '../../shared/types'
+import type { InstagramCaptionResult, PhotoAnalyzeResultItem, ReelsCaption, ReelsScriptResult, ReelsScriptSegment, YoutubeGenerationResult } from '../../shared/types'
 
 const GEMINI_MODEL = 'gemini-3.6-flash'
 const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`
@@ -7,6 +7,8 @@ const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models
 const GEMINI_GENERATE_TIMEOUT_MS = 60_000
 /** 키 검증은 모델 목록만 조회하는 가벼운 호출이라 짧게 잡아, 유효하지 않은 키로 오래 붙잡히지 않게 한다. */
 const GEMINI_VALIDATE_TIMEOUT_MS = 10_000
+/** 사진 최대 15장을 한 번에 분석할 수 있어 텍스트 생성보다 여유 있게 잡는다. */
+const GEMINI_PHOTO_ANALYZE_TIMEOUT_MS = 75_000
 
 const BLOG_RESPONSE_SCHEMA = {
   type: 'OBJECT',
@@ -71,6 +73,29 @@ const YOUTUBE_RESPONSE_SCHEMA = {
   required: ['titles', 'descriptionIntro']
 }
 
+const PHOTO_ANALYSIS_ITEM_SCHEMA = {
+  type: 'OBJECT',
+  properties: {
+    type: { type: 'STRING', enum: ['exterior', 'interior', 'subject', 'text', 'people', 'scenery', 'other'] },
+    description: { type: 'STRING' },
+    observableFacts: { type: 'ARRAY', items: { type: 'STRING' } },
+    visibleText: { type: 'ARRAY', items: { type: 'STRING' } },
+    possibleTopics: { type: 'ARRAY', items: { type: 'STRING' } },
+    importance: { type: 'STRING', enum: ['primary', 'secondary'] },
+    similarityGroup: { type: 'NUMBER' },
+    suggestedCaption: { type: 'STRING' }
+  },
+  required: ['type', 'description', 'observableFacts', 'visibleText', 'possibleTopics', 'importance', 'similarityGroup', 'suggestedCaption']
+}
+
+const PHOTO_ANALYSIS_RESPONSE_SCHEMA = {
+  type: 'OBJECT',
+  properties: {
+    results: { type: 'ARRAY', items: PHOTO_ANALYSIS_ITEM_SCHEMA }
+  },
+  required: ['results']
+}
+
 const SUBTITLE_TRANSLATE_RESPONSE_SCHEMA = {
   type: 'OBJECT',
   properties: {
@@ -101,20 +126,20 @@ interface GeminiErrorBody {
 }
 
 /** fetch → 에러 매핑 → JSON 파싱까지만 담당하는 공용 저수준 호출. 필드별 필수값 검증은 각 호출부가 한다. */
-async function callGeminiJson<T>(apiKey: string, systemPrompt: string, userPrompt: string, schema: object, temperature = 1): Promise<T> {
+async function requestGemini<T>(apiKey: string, systemPrompt: string, parts: object[], schema: object, temperature: number, timeoutMs: number): Promise<T> {
   const res = await fetchWithTimeout(`${GEMINI_ENDPOINT}?key=${encodeURIComponent(apiKey)}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: systemPrompt }] },
-      contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+      contents: [{ role: 'user', parts }],
       generationConfig: {
         responseMimeType: 'application/json',
         responseSchema: schema,
         temperature
       }
     })
-  }, GEMINI_GENERATE_TIMEOUT_MS)
+  }, timeoutMs)
 
   if (!res.ok) {
     const errBody = await res.json().catch(() => null) as GeminiErrorBody | null
@@ -136,6 +161,11 @@ async function callGeminiJson<T>(apiKey: string, systemPrompt: string, userPromp
   } catch {
     throw createError({ statusCode: 502, statusMessage: 'AI 응답 형식을 해석하지 못했습니다. 다시 시도해주세요.' })
   }
+}
+
+/** 텍스트 전용 생성 호출. 사진 분석(analyzePhotos)과 fetch/에러매핑/JSON파싱 로직을 requestGemini로 공유한다. */
+async function callGeminiJson<T>(apiKey: string, systemPrompt: string, userPrompt: string, schema: object, temperature = 1): Promise<T> {
+  return requestGemini<T>(apiKey, systemPrompt, [{ text: userPrompt }], schema, temperature, GEMINI_GENERATE_TIMEOUT_MS)
 }
 
 /** Gemini가 JSON 응답의 문자열 필드 안에 실제 줄바꿈 대신 "\n" 두 글자(백슬래시+n)를 그대로 텍스트로 넣는 경우가 있다(정상적인 JSON 이스케이프는 이미 JSON.parse 단계에서 실제 줄바꿈으로 풀리므로, 이 시점에 남아있는 "\n" 텍스트는 항상 잘못된 값이다). 복사했을 때 화면에 "\n"이 그대로 보이는 문제를 막기 위해 파싱 직후 모든 문자열 필드에서 이를 실제 줄바꿈으로 치환한다. */
@@ -258,6 +288,46 @@ export async function callGeminiSubtitleTranslate(apiKey: string, systemPrompt: 
   }
 
   return translations
+}
+
+function isCompletePhotoAnalysisItem(item?: Partial<PhotoAnalyzeResultItem>): item is PhotoAnalyzeResultItem {
+  return !!item?.type && !!item.description
+    && Array.isArray(item.observableFacts) && Array.isArray(item.visibleText) && Array.isArray(item.possibleTopics)
+    && (item.importance === 'primary' || item.importance === 'secondary')
+    && typeof item.similarityGroup === 'number' && !!item.suggestedCaption
+}
+
+/**
+ * 사진 여러 장을 한 번의 호출로 분석한다(유사 사진 그룹핑이 같은 컨텍스트 안에서 비교되어야 하므로 배치를
+ * 쪼개지 않는다). 응답은 입력 images와 배열 길이·순서가 반드시 1:1이어야 하며, 위치 기반으로 매칭하는 구조라
+ * 하나라도 누락되면 어느 결과가 어느 사진인지 알 수 없어 배치 전체를 실패 처리한다.
+ */
+export async function analyzePhotos(
+  apiKey: string,
+  systemPrompt: string,
+  userPrompt: string,
+  images: { mimeType: string, base64: string }[]
+): Promise<PhotoAnalyzeResultItem[]> {
+  const imageParts = images.flatMap((img, i) => [
+    { text: `[사진 ${i + 1}]` },
+    { inlineData: { mimeType: img.mimeType, data: img.base64 } }
+  ])
+
+  const parsed = await requestGemini<{ results?: PhotoAnalyzeResultItem[] }>(
+    apiKey,
+    systemPrompt,
+    [{ text: userPrompt }, ...imageParts],
+    PHOTO_ANALYSIS_RESPONSE_SCHEMA,
+    1,
+    GEMINI_PHOTO_ANALYZE_TIMEOUT_MS
+  )
+
+  const results = parsed.results
+  if (!Array.isArray(results) || results.length !== images.length || !results.every(isCompletePhotoAnalysisItem)) {
+    throw createError({ statusCode: 502, statusMessage: '사진 분석 결과를 받지 못했습니다. 다시 시도해주세요.' })
+  }
+
+  return results
 }
 
 export async function validateGeminiKey(apiKey: string): Promise<void> {

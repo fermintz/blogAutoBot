@@ -31,12 +31,25 @@ export function useBlogGenerator() {
 
   const { add: addHistoryItem } = useHistory()
 
+  const {
+    photos,
+    photoBusy,
+    hasFailedPhotos,
+    batchErrorMessage: photoBatchErrorMessage,
+    rejectedFileMessage: photoRejectedFileMessage,
+    addFiles: addPhotoFiles,
+    removePhoto,
+    retryPhoto,
+    resetPhotos,
+    buildPhotoAnalysisPayload
+  } = usePhotoUploader(topic)
+
   const result = ref<GenerateResponse | null>(null)
   const lastRequest = ref<GenerateRequest | null>(null)
   const pending = ref(false)
   const errorMessage = ref('')
 
-  const canGenerate = computed(() => hasApiKey.value && !!mainKeyword.value.trim() && !pending.value)
+  const canGenerate = computed(() => hasApiKey.value && !!mainKeyword.value.trim() && !pending.value && !photoBusy.value)
 
   function resetForm() {
     mainKeyword.value = ''
@@ -49,6 +62,7 @@ export function useBlogGenerator() {
     purchaseLinkUrl.value = ''
     purchaseLinkLabel.value = '지금 구매하러 가기 👉'
     sponsorDisclosure.value = ''
+    resetPhotos()
   }
 
   async function generate() {
@@ -75,7 +89,8 @@ export function useBlogGenerator() {
       writingRules: writingRules.value.trim() || undefined,
       businessInfo: hasBusinessInfo(businessInfo.value) ? businessInfo.value : undefined,
       sponsorDisclosure: sponsorDisclosure.value.trim() || undefined,
-      purchaseLinkBlock: purchaseLinkBlock.value
+      purchaseLinkBlock: purchaseLinkBlock.value,
+      photoAnalysis: photos.value.length > 0 ? buildPhotoAnalysisPayload() : undefined
     }
 
     try {
@@ -108,6 +123,14 @@ export function useBlogGenerator() {
     purchaseLinkLabel,
     sponsorDisclosure,
     bridgeUrlTemplate,
+    photos,
+    photoBusy,
+    hasFailedPhotos,
+    photoBatchErrorMessage,
+    photoRejectedFileMessage,
+    addPhotoFiles,
+    removePhoto,
+    retryPhoto,
     result,
     lastRequest,
     pending,

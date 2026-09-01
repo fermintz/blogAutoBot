@@ -1,4 +1,4 @@
-import { TOPIC_BUSINESS_FIELDS, type GenerateRequest, type ToneStyle } from '../../../shared/types'
+import { PHOTO_TYPE_OPTIONS, TOPIC_BUSINESS_FIELDS, type GenerateRequest, type PhotoAnalysis, type ToneStyle } from '../../../shared/types'
 
 const TONE_GUIDE: Record<ToneStyle, string> = {
   friendly: '친한 친구에게 이야기하듯 편안한 구어체를 섞어 쓴다. "~했어요", "~더라구요" 같은 자연스러운 종결어미를 쓰고, 이모지는 과하지 않게 가끔만 사용한다.',
@@ -65,4 +65,42 @@ export function buildBusinessInfoBlock(topic: GenerateRequest['topic'], info?: G
   }
 
   return `아래 업체/상품 정보를 본문 중후반부에 자연스러운 문장이나 정리된 정보 블록으로 녹여 넣는다. 정보를 지어내거나 왜곡하지 말고 주어진 값만 사용한다.\n${lines.join('\n')}`
+}
+
+/**
+ * 업로드된 사진 분석 결과를 프롬프트에 넣는 블록. 사진이 없으면 다른 블록들과 달리 안내문구조차 없이
+ * 완전한 빈 문자열을 반환한다 — promptBuilder.ts가 이 값을 보고 섹션 자체를 통째로 생략해, 사진 없는 요청의
+ * 프롬프트가 기존과 한 글자도 다르지 않게 유지되도록 하기 위함이다.
+ */
+export function buildPhotoAnalysisBlock(photos?: GenerateRequest['photoAnalysis']): string {
+  if (!photos || photos.length === 0) return ''
+
+  const sorted = [...photos].sort((a, b) => a.order - b.order)
+  const groupMembers = new Map<string, number[]>()
+  sorted.forEach((p, i) => {
+    const list = groupMembers.get(p.similarityGroupId) ?? []
+    list.push(i + 1)
+    groupMembers.set(p.similarityGroupId, list)
+  })
+
+  const items = sorted.map((p: PhotoAnalysis, i) => {
+    const idx = i + 1
+    const typeLabel = PHOTO_TYPE_OPTIONS.find(t => t.value === p.type)?.label ?? p.type
+    const siblings = (groupMembers.get(p.similarityGroupId) ?? []).filter(n => n !== idx)
+    const similarLine = siblings.length > 0
+      ? `- 닮은 사진: ${siblings.join(', ')}번 (같은 장면으로 추정 — 대표로 한 번만 비중 있게, 나머지는 간단히만 언급)`
+      : '- 닮은 사진: 없음(단독 장면)'
+    return `[사진 ${idx}] (유형: ${typeLabel}, 비중: ${p.importance === 'primary' ? '주요' : '보조'})
+- 설명: ${p.description}
+- 관찰된 사실: ${p.observableFacts.join(' / ') || '없음'}
+- 사진 속 텍스트: ${p.visibleText.length ? p.visibleText.map(t => `"${t}"`).join(', ') : '없음'}
+- 활용 가능 주제: ${p.possibleTopics.join(', ') || '없음'}
+- 추천 자리 표시: ${p.suggestedCaption}
+${similarLine}`
+  }).join('\n\n')
+
+  return `아래는 사용자가 실제로 업로드한 사진 ${sorted.length}장을 미리 분석한 결과다. 이 사진들은 실제로 이 글에 첨부될 예정이므로, 위 "사진 자리 표시" 지침에 따라 위치를 배치할 때 이 사진들의 내용에 최우선으로 대응시킨다. 이 목록과 사용자가 입력한 정보에 없는 세부사항은 추정하거나 지어내지 않는다.
+"""
+${items}
+"""`
 }

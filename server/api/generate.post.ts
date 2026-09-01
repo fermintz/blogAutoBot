@@ -4,6 +4,8 @@ import {
   KEYWORD_LIST_MAX_COUNT,
   KEYWORD_MAX_LENGTH,
   LONG_CONTENT_MAX_LENGTH,
+  PHOTO_MAX_COUNT,
+  PHOTO_TEXT_FIELD_MAX_LENGTH,
   PURCHASE_LINK_BLOCK_MAX_LENGTH,
   RULES_TEXT_MAX_LENGTH,
   SHORT_LABEL_MAX_LENGTH,
@@ -42,6 +44,18 @@ export default defineEventHandler(async (event): Promise<GenerateResponse> => {
       assertMaxLength(value, FACT_FIELD_MAX_LENGTH, '업체 및 상품 정보')
     }
   }
+  if (body.photoAnalysis) {
+    if (body.photoAnalysis.length > PHOTO_MAX_COUNT) {
+      throw createError({ statusCode: 400, statusMessage: `사진은 최대 ${PHOTO_MAX_COUNT}장까지 반영할 수 있습니다.` })
+    }
+    for (const photo of body.photoAnalysis) {
+      if (!photo.description || !photo.type || typeof photo.order !== 'number' || !photo.similarityGroupId) {
+        throw createError({ statusCode: 400, statusMessage: '사진 분석 결과 형식이 올바르지 않습니다.' })
+      }
+      assertMaxLength(photo.description, PHOTO_TEXT_FIELD_MAX_LENGTH, '사진 분석 설명')
+      assertMaxLength(photo.suggestedCaption, PHOTO_TEXT_FIELD_MAX_LENGTH, '사진 자리 표시 제안')
+    }
+  }
 
   const client = await serverSupabaseClient(event)
   const { data: apiKey } = await client.rpc('get_decrypted_api_key', {
@@ -64,7 +78,8 @@ export default defineEventHandler(async (event): Promise<GenerateResponse> => {
     writingRules: body.writingRules?.trim(),
     businessInfo: body.businessInfo,
     sponsorDisclosure: body.sponsorDisclosure?.trim(),
-    purchaseLinkBlock: body.purchaseLinkBlock?.trim()
+    purchaseLinkBlock: body.purchaseLinkBlock?.trim(),
+    photoAnalysis: body.photoAnalysis
   }
 
   const prompt = buildPrompt(req)
