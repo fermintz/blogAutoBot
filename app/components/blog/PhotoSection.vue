@@ -57,6 +57,7 @@ const STATUS_BADGE: Record<ClientPhoto['status'], { label: string, color: 'neutr
       description="또는 파일을 선택하세요 (JPG/PNG/WEBP)"
       :interactive="true"
       class="w-full min-h-32"
+      :ui="{ description: 'text-xs text-gray-500' }"
       @update:model-value="onFilesSelected"
     />
 
@@ -103,10 +104,13 @@ const STATUS_BADGE: Record<ClientPhoto['status'], { label: string, color: 'neutr
       tag="div"
       class="grid grid-cols-5 gap-3"
       ghost-class="opacity-40"
-      drag-class="ring-2 ring-primary"
+      drag-class="photo-dragging"
+      :animation="200"
+      easing="cubic-bezier(0.4, 0, 0.2, 1)"
+      :force-fallback="true"
     >
       <template #item="{ element, index }: { element: ClientPhoto, index: number }">
-        <div class="relative rounded-lg border border-default overflow-hidden aspect-square cursor-grab group">
+        <div class="photo-item relative rounded-lg border border-default overflow-hidden aspect-square cursor-grab group">
           <img
             :src="element.previewUrl"
             :alt="`사진 ${index + 1}`"
@@ -151,3 +155,18 @@ const STATUS_BADGE: Record<ClientPhoto['status'], { label: string, color: 'neutr
     </draggable>
   </div>
 </template>
+
+<style scoped>
+/*
+ * vuedraggable(SortableJS)의 drag-class는 el.classList.add()에 문자열 하나를 그대로 넘기는데,
+ * 공백이 섞인 다중 클래스("ring-2 ring-primary")를 넘기면 DOMException이 던져지면서 드래그 자체가
+ * 즉시 중단된다(순서가 전혀 바뀌지 않음). 그래서 단일 클래스 이름 하나로 동일한 효과를 낸다.
+ */
+.photo-dragging {
+  box-shadow: 0 0 0 2px var(--ui-primary);
+}
+
+.photo-item {
+  transition: box-shadow 0.15s ease;
+}
+</style>
